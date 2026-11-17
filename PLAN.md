@@ -138,7 +138,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** CLI tests cover empty repositories, unknown names, missing
     sources, nested modules, slash-separated output, and JSON-only directories.
 
-- [ ] **S13 — Plan automatically discovered links without writing**
+- [x] **S13 — Plan automatically discovered links without writing**
   - **Depends on:** S11.
   - **Scope:** recursive file candidates, hidden files, unmapped directories,
     empty directories, and destination-relative structure. Keep planning separate
@@ -378,6 +378,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/operation/discovery.go`, `internal/operation/discovery_test.go`, `internal/cli/list.go`, `internal/cli/list_test.go`, `internal/cli/cli.go`, `internal/cli/cli_test.go`, `README.md`, `PLAN.md`.
 - Checks: focused `go test ./internal/cli ./internal/operation -count=1`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check`, and a temporary executable `ls fixture` smoke test passed (no app-data write). Initial focused run exposed the old CLI placeholder test for `ls`; updated it to test the still-unimplemented `info` handler and reran all checks. Symlink tests run on Linux, with explicit skips if creation is unavailable. No real dotfiles or C# files changed.
 - Next ready step: S13 (automatic link candidate planning).
+
+### 2026-11-17 / S13
+
+- Outcome: complete. Added side-effect-free automatic candidate planning for regular files, preserving nested destination structure and hidden files while traversing unmapped directories. Empty directories yield no links; source symlinks, symlinked root modules, and nonregular items are skipped/rejected without following them. Mapping and payload exclusions remain S14–S15.
+- Files changed: `internal/linkplan/automatic.go`, `internal/linkplan/automatic_test.go`, `PLAN.md`.
+- Checks: focused `go test ./internal/linkplan -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host; symlink creation tests explicitly skip if unavailable on other platforms. No real dotfiles or C# files touched.
+- Next ready step: S14 (explicit file/directory mappings).
 
 ### Session entry template
 
