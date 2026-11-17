@@ -212,7 +212,7 @@ project scaffolding and isolated test helpers can proceed independently.
     remapped destinations, relative roots, and distinction between existence
     and actual symbolic-link ownership/correctness.
 
-- [ ] **S21 — Implement safe-to-test shell execution support**
+- [x] **S21 — Implement safe-to-test shell execution support**
   - **Depends on:** S01, S03, S05.
   - **Scope:** approved Linux/Windows shells, cwd, stdin/stdout/stderr, lifecycle,
     unsupported platforms, and exit-code handling. Use fake runners for unit
@@ -465,6 +465,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/cli/module_info.go`, `internal/cli/module_info_test.go`, `internal/cli/info.go`, `internal/cli/info_test.go`, `internal/cli/cli_test.go`, `README.md`, `PLAN.md`. Inspected the C# `ColorCodes` source read-only.
 - Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host. No real dotfiles or C# files touched.
 - Next ready step: S21 (safe-to-test shell execution support); S23/S24 independently ready.
+
+### 2026-11-17 / S21
+
+- Outcome: complete. Added injectable runner and real process adapter for trusted, explicitly requested single-line commands: Linux `sh -c`, Windows `pwsh -c`, effective cwd, redirected EOF stdin, forwarded stdout/stderr, propagated child/start/cancellation errors, and unsupported-platform rejection. No CLI command wiring or real dotfile scripts executed.
+- Files changed: `internal/shell/shell.go`, `internal/shell/shell_test.go`, `PLAN.md`. Inspected read-only C# `ShellService.cs`.
+- Checks: focused `go test ./internal/shell -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. Native `sh` fixture smoke ran on Linux; Windows selection was simulated, native Windows execution remains S26. No real dotfiles or C# files touched.
+- Next ready step: S22 (wire install/configure).
 
 ### Session entry template
 
