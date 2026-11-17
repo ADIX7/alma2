@@ -42,7 +42,7 @@ fixtures; the C# source and real dotfiles are read-only. `internal/e2e` builds
 | 1: module-relative mappings, later source wins, symlink safety | `linkplan.TestMappedFilesDirectoriesAndTargets`, `linkplan.TestMappedLastSourceWinsAndYAMLMerge`, `e2e.TestYAMLToDryRunLinkHistoryAndRepeat` |
 | 2: specificity/availability/exclusions/README | `config.TestSelectSpecificityAndOverrides`, `config.TestSelectEqualSpecificityAndExplicitFalse`, `linkplan.TestPlanMergedExclusionsAndMappedDirectoryCaveat`, `cli.TestConfiguredCommandMissingAndUnavailable` |
 | 3: dry-run/read-only, broken links, continue failures | `cli.TestLinkDryRunProposalsAndConflicts`, `e2e.TestSubprocessPartialFailurePersistsOnlySuccess`, `linkapply.TestApplyPermissionFailureWhenEnforced` |
-| 4: YAML-only payload, tokens, separators, unknown repositories | `config.TestInvalidModuleYAML`, `config.TestInvalidRepositoryYAML`, `pathresolve.TestResolveErrorsAndWindowsAppData`, `e2e.TestSubprocessRejectedConfigurationAndPlanAreReadOnly` |
+| 4: YAML-only payload, tokens, separators, unknown repositories | `config.TestInvalidModuleYAML`, `config.TestInvalidRepositoryYAML`, `pathresolve.TestResolveErrorsAndWindowsAppData`, `pathresolve.TestWindowsShortPathTildeIsNotHomeToken`, `e2e.TestSubprocessRejectedConfigurationAndPlanAreReadOnly` |
 | 5: validation/exit behavior | `cli.TestParse`, `e2e.TestSubprocessRejectedConfigurationAndPlanAreReadOnly`, `linkapply.TestApplyContinuesOnFailureAndRejectsChangedSource` |
 | 6: shell restrictions and README | `shell.TestShellSelectionAndValidation`, `cli.TestConfiguredCommandRejectsMultilineAndPropagatesExit`, `cli.TestReadmePriorityAndLiteralOutput` |
 | 7: `ls`/`info` display fixes | `operation.TestDiscoverModules`, `cli.TestRepositoryInfoSortedCountsAndCapabilities`, `cli.TestModuleInfoResolvedTargetsAndExistence` |
@@ -54,7 +54,7 @@ fixtures; the C# source and real dotfiles are read-only. `internal/e2e` builds
 
 Linux `sh` and symlink tests run natively. Windows CI ran the full suite,
 including a native `pwsh` smoke test and history replacement, in
-[run 44150173974](https://github.com/ADIX7/alma2/actions/runs/44150173974).
+[run 44150394663](https://github.com/ADIX7/alma2/actions/runs/44150394663).
 Windows symlink tests may skip if creation is unavailable; this passing run does
 not certify symlink privileges on every Windows machine. POSIX permission tests
 skip as root or where permissions cannot be enforced, including the Docker job

@@ -25,6 +25,9 @@ jobs:
       - name: Formatting (Linux)
         if: runner.os == 'Linux'
         run: test -z "$(gofmt -l $(git ls-files '*.go'))"
+      - name: Disposable rehearsal (Linux)
+        if: runner.os == 'Linux'
+        run: sh scripts/rehearse.sh
 
   container:
     runs-on: ubuntu-latest

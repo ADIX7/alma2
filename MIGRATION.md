@@ -125,7 +125,9 @@ Existing path resolution supports:
 - Relative paths: interpret against the applicable base when one is provided.
 
 Substitutions are literal and can occur anywhere in a path, not just at its
-start. A path containing `~` bypasses combination with a supplied base.
+start. A path containing a home-token `~` bypasses combination with a supplied
+base. On Windows, the tilde in a numeric 8.3 short-name suffix such as
+`RUNNER~1` is literal, not a home token.
 There is no general environment-variable expansion in the current CLI.
 In particular, `%APPDATA%` appears in the WIP examples but is not currently
 supported by the legacy CLI. The Go migration adds it for the Windows roaming

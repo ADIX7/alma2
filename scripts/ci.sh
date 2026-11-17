@@ -5,3 +5,4 @@ test -z "$unformatted" || { printf 'Unformatted Go files:\n%s\n' "$unformatted" 
 go test ./... -count=1
 go vet ./...
 go build -o /tmp/alma ./cmd/alma
+sh scripts/rehearse.sh

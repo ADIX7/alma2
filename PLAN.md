@@ -325,8 +325,23 @@ project scaffolding and isolated test helpers can proceed independently.
     native tests, cross-compilation, permissions-dependent skips, and untested
     platforms are clearly distinguished. Shell restrictions remain explicit.
 
-- [ ] **S27 — Publish usage guide and rehearse migration safely**
+- [x] **S27a — Document usage and rehearse entirely in fixtures**
   - **Depends on:** S26.
+  - **Scope:** publish build/use/YAML/environment/limitations/checklist guide,
+    implement POSIX disposable rehearsal, and add its check to Linux/Docker CI.
+  - **Done when:** guide agrees with migration contract, local rehearsal verifies
+    quoted/space paths, exclusions, read-only preview, links, history, and
+    repeat conflicts; local full tests/doc checks pass.
+
+- [ ] **S27b — Verify hosted rehearsal CI**
+  - **Depends on:** S27a.
+  - **Scope:** run hosted native Linux/Windows/Docker checks with documented
+    rehearsal; record actual results and platform limits.
+  - **Done when:** hosted CI passes and progress notes are updated; S27 can then
+    be closed without authorizing any real-dotfile rollout.
+
+- [ ] **S27 — Publish usage guide and rehearse migration safely**
+  - **Depends on:** S27a, S27b.
   - **Scope:** populate `README.md` with build/use instructions, valid YAML
     examples, environment precedence, deliberate legacy differences, limitations,
     and a migration checklist. Rehearse on disposable copies/targets only.
@@ -619,6 +634,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `README.md`, `docs/coverage.md`, `PLAN.md` (record verified platform scope and results).
 - Checks: hosted run passed all three jobs at `e776d8e`; local `go test ./... -count=1`, `go vet ./...`, `gofmt`, documentation assertions, and `git diff --check` passed. Native Linux shell/symlink coverage and native Windows PowerShell coverage ran. Windows symlink tests may skip when creation is unavailable; Docker runs as root, so permission-dependent checks there can skip. macOS arm64/FreeBSD amd64 were cross-built only, not run natively. No real dotfiles or C# files touched.
 - Next ready step: S27 (usage guide and safe migration rehearsal with fixture-only data).
+
+### 2026-11-17 / S27a fixture-only usage guide
+
+- Outcome: complete. Replaced skeletal README with command/YAML/environment/platform guidance, migration checklist, safety boundaries, and deliberate legacy differences. Added `scripts/rehearse.sh`: sanitized temporary repository, read-only preview, quoted home/space paths, exclusions, real links only in temp targets, separate YAML history, repeat conflicts, automatic cleanup. CI now runs it on native Ubuntu and in the Docker job. Clarified Windows 8.3 short-name exception in `MIGRATION.md` and coverage audit. S27b/S27 remain unchecked until hosted rehearsal succeeds.
+- Files changed: `README.md`, `MIGRATION.md`, `docs/coverage.md`, `scripts/rehearse.sh`, `scripts/ci.sh`, `.github/workflows/ci.yml`, `PLAN.md`.
+- Checks: `sh -n` and two local disposable rehearsal runs, Markdown local-link/fence and coverage-reference assertions, YAML workflow syntax, full `go test ./... -count=1`, `go vet ./...`, Go formatting, local Docker full checks including rehearsal, and `git diff --check` passed. No real dotfiles or C# files touched.
+- Next ready step: S27b; push branch and verify hosted Linux/Windows/Docker checks with rehearsal.
 
 ### Session entry template
 
