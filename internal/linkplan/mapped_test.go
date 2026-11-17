@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -27,7 +28,7 @@ func TestMappedFilesDirectoriesAndTargets(t *testing.T) {
 		t.Fatal(err)
 	}
 	base := filepath.Join(f.Target, "override") // final module target, not repository target
-	paths := pathresolve.Resolver{OS: "linux", Home: f.Home, Documents: filepath.Join(f.Home, "Documents")}
+	paths := pathresolve.Resolver{OS: runtime.GOOS, Home: f.Home, Documents: filepath.Join(f.Home, "Documents")}
 	links := []config.Link{
 		{Source: "editor/config", Target: "renamed/file"},
 		{Source: "whole", Target: "whole-linked"},

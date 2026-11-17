@@ -295,8 +295,15 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** focused/full local tests, Windows test cross-compilation, and
     local Docker checks pass; S26b owns hosted native Windows retest.
 
+- [x] **S26b2 — Repair remaining Windows test fixture**
+  - **Depends on:** S26b1.
+  - **Scope:** make absolute-path mapping test use the host OS for resolver
+    semantics instead of injecting Linux on a Windows filesystem.
+  - **Done when:** focused/full local tests, Windows test cross-compilation, and
+    local Docker checks pass; S26b owns hosted native Windows retest.
+
 - [ ] **S26b — Verify hosted CI and native Windows behavior**
-  - **Depends on:** S26a, S26a2, S26b1.
+  - **Depends on:** S26a, S26a2, S26b1, S26b2.
   - **Scope:** run the configured hosted Linux/Windows jobs, reconcile failures
     and platform-specific skips, and record actual results.
   - **Done when:** CI jobs pass, or the step remains unchecked with an explicit
@@ -584,6 +591,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/pathresolve/pathresolve.go`, `internal/pathresolve/pathresolve_test.go`, `internal/linkplan/filtered_test.go`, `PLAN.md`.
 - Checks: focused `go test ./internal/pathresolve ./internal/linkplan ./internal/cli -count=1`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, Windows test-binary cross-compilation (pathresolve/linkplan/cli/e2e), local Docker build/run full checks, and `git diff --check` passed. Native Windows runtime fix still unverified until S26b.
 - Next ready step: push branch, inspect hosted Linux/Windows/Docker rerun, fix remaining failures before S26b completion.
+
+### 2026-11-17 / S26b2 mapped-test Windows fixture
+
+- Outcome: second hosted run [44149579514](https://github.com/ADIX7/alma2/actions/runs/44149579514) passed Ubuntu, Docker, and all Windows packages except `linkplan.TestMappedFilesDirectoriesAndTargets`. That test injected `Resolver.OS = linux` while using native Windows fixture paths containing `RUNNER~1`, reproducing the otherwise-fixed tilde expansion. Changed that test to use `runtime.GOOS`; S26b remains unchecked until hosted retest passes.
+- Files changed: `internal/linkplan/mapped_test.go`, `PLAN.md`.
+- Checks: focused `go test ./internal/linkplan ./internal/pathresolve -count=1`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, Windows test cross-compilation, local Docker full check, and diff checks passed. Native Windows runtime retest still pending S26b.
+- Next ready step: push branch, inspect hosted Linux/Windows/Docker rerun.
 
 ### Session entry template
 
