@@ -76,7 +76,7 @@ project scaffolding and isolated test helpers can proceed independently.
 
 ### Configuration and context
 
-- [ ] **S05 — Resolve startup directories and environment precedence**
+- [x] **S05 — Resolve startup directories and environment precedence**
   - **Depends on:** S01, S03.
   - **Scope:** effective working directory, configuration root, application-data
     root, provider diagnostics data, and approved directory-creation timing.
@@ -308,6 +308,14 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, temporary-binary build and help/unimplemented-handler smoke checks, `gofmt`, and `git diff --check` passed. No skips; `cmd/alma` has no package-local test files.
 - Decisions: no new behavior policies; link-specific help remains an explicit placeholder until S16, diagnostics and unlink until S24. No real dotfiles or C# files touched.
 - Next ready step: S05 (startup directories and environment precedence).
+
+### 2026-11-17 / S05
+
+- Outcome: complete. Added side-effect-free working/config/app-data provider selection and diagnostics values; explicit app-data preparation skips all writes for dry runs. CLI wiring remains for later command steps.
+- Files changed: `internal/startup/startup.go`, `internal/startup/startup_test.go`, `PLAN.md`.
+- Checks: focused `go test ./internal/startup -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips.
+- Decisions: no new behavior policies; config provider selection tests the base directory, not `repository.yml`. No real dotfiles or C# files touched.
+- Next ready step: S06 (path expressions). CLI startup integration must use this resolver and avoid preparation for dry runs.
 
 ### Session entry template
 
