@@ -58,7 +58,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** the executable builds and `go test ./...` succeeds from a
     clean checkout with documented prerequisites.
 
-- [ ] **S03 — Add isolated filesystem/CLI test helpers**
+- [x] **S03 — Add isolated filesystem/CLI test helpers**
   - **Depends on:** S02.
   - **Scope:** temporary fixture repositories, target roots, controlled
     environment/home/data values, captured output, and safe subprocess helpers.
@@ -292,6 +292,14 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Checks: `gofmt` check, `go build -o <temporary path> ./cmd/alma`, disposable-binary smoke check (exit 1, expected stderr, empty stdout), `go test ./...`, and `git diff --check` passed. `go test` reported no test files; executable test helpers start in S03.
 - Decisions: no new behavior policies; YAML-only contract unchanged. No real dotfiles or C# files touched.
 - Next ready step: S03 (isolated filesystem/CLI test helpers). Do not begin it in this session.
+
+### 2026-11-17 / S03
+
+- Outcome: complete. Added disposable fixture roots, guarded fixture-file writes, and direct CLI subprocess execution with controlled environment, cwd, timeout, captured output, and exit status. No application command behavior added.
+- Files changed: `internal/testutil/fixture.go`, `internal/testutil/fixture_test.go`, `README.md` (test isolation guidance), `PLAN.md` (progress and handoff).
+- Checks: focused `go test ./internal/testutil -count=1 -v` passed (fixture cleanup, home/config/data isolation, captured streams and exit code, invalid executable paths); full `go test ./... -count=1`, `go vet ./...`, `go build ./cmd/alma` to a temporary output, `gofmt` check, and `git diff --check` passed. No skips; `cmd/alma` still has no test files.
+- Decisions: no new behavior policies; YAML-only contract unchanged. No real dotfiles or C# files touched.
+- Next ready step: S04 (command dispatch and argument handling). Do not begin it in this session.
 
 ### Session entry template
 
