@@ -28,7 +28,7 @@ failures are documented, not implicitly endorsed as requirements.
 - Use the WIP module schema: a `platforms` sequence containing `platform`
   selectors and `links` sequences of `source`/`target` pairs.
 - Describe legacy defects separately; do not silently treat fixes as approved
-  behavior changes. Unresolved policy choices appear at the end.
+  behavior changes. Approved differences and remaining questions appear at the end.
 
 Only `.yml` filenames are confirmed. Supporting `.yaml` aliases is not specified.
 
@@ -106,6 +106,8 @@ Choose an existing base from:
 Legacy behavior retains a non-null final fallback even if nonexistent;
 otherwise it uses the working directory. Append `alma`, and create the result
 if needed. This startup side effect can occur even for informational commands.
+**Approved exception:** dry runs must not create this directory or any other
+filesystem item (see section 8).
 
 Application data stores the record of successfully created links. It is
 separate from repository configuration.
@@ -124,7 +126,10 @@ Substitutions are literal and can occur anywhere in a path, not just at its
 start. A path containing `~` bypasses combination with a supplied base.
 There is no general environment-variable expansion in the current CLI.
 In particular, `%APPDATA%` appears in the WIP examples but is not currently
-supported.
+supported by the legacy CLI. The Go migration adds it for the Windows roaming
+application-data directory; on non-Windows platforms it is unsupported. YAML
+path values must use `/`; reject backslash path separators instead of
+normalizing them. Shell command strings are not path values.
 
 ### Repository source and destination selection
 
@@ -137,8 +142,10 @@ When a named repository is found, its non-null `repositoryPath` and `linkPath`
 replace the corresponding defaults after path-expression resolution.
 A relative repository path is relative to the effective working directory.
 
-An unknown repository name silently retains those defaults for module
-operations and `info`; `ls <repository>` instead reports the unknown name.
+In the legacy CLI, an unknown repository name silently retains those defaults
+for module operations and `info`; `ls <repository>` instead reports the unknown
+name. The Go CLI reports an error for any explicitly named unknown repository.
+`ls` resolves `repositoryPath` with the same path rules as module commands.
 
 A module's `target` overrides the repository destination. Resolve it relative
 to the repository destination unless it is absolute or uses the home shortcut.
@@ -170,7 +177,9 @@ Fields retain the existing names:
 | `linkPath` | Optional default destination root. |
 
 Missing source/destination fields retain the operation's working-directory
-fallbacks. The legacy `ls` command specifically requires `repositoryPath`.
+fallbacks. The legacy `ls` command specifically requires `repositoryPath`;
+Go `ls` uses the common path resolver for a present `repositoryPath`. Explicit
+YAML null is invalid, not equivalent to an omitted optional field.
 
 ### Module file
 
@@ -204,7 +213,7 @@ platforms:
 | `platform` | Platform selector; `default` matches every platform. |
 | `target` | Optional destination-root override. |
 | `links` | Explicit mappings; omitted means no explicit mappings, not no linking. |
-| `links[].source` | Source file or directory inside the module. See legacy matching caveat below. |
+| `links[].source` | `/`-separated path relative to the module root, for files and directories alike. |
 | `links[].target` | Destination path, relative to the final module root or absolute. |
 | `exclude` | Source-relative paths to omit, including descendants. Default: none. |
 | `excludeReadme` | Exclude root `README.md`, `README.txt`, and `README`; default `true`. |
@@ -212,7 +221,16 @@ platforms:
 | `configure` | Optional shell command executed by `configure`. |
 
 The exclusion fields describe the existing configurable capability; they are
-not reliably retained by legacy multi-section merging. See section 8.
+not reliably retained by legacy multi-section merging. Approved Go merging
+preserves them as described below and in section 8.
+
+**Approved migration difference — link matching:** match each `links[].source`
+against the complete, `/`-separated module-relative path of a file or directory.
+For example, `source: config` matches the root `config` only;
+`source: editor/config` matches that nested file only. Unmapped files still
+participate in automatic discovery when the module is applicable. Reject
+absolute or module-escaping configured source paths. If mappings repeat a
+source, the later mapping in merge order wins (including within a section).
 
 ### Platform identifiers and merging
 
@@ -244,27 +262,43 @@ For matching sections, legacy behavior follows configuration declaration order:
 - A present config with no matching sections resolves to an empty configuration,
   not an unsupported/disabled module. Linking can still discover its files.
 
-The YAML sequence explicitly preserves declaration order. Do not silently add
-specificity-based sorting; that would be another behavior change.
+**Approved Go behavior:** parse quoted Linux `ID` values normally so
+`ID="fedora"` and `ID=fedora` give the same distribution. Merge all matching
+sections from least to most specific: `default` first, then increasingly long
+matching selectors (for example `linux`, `linux-fedora`,
+`linux-fedora-x64`). YAML declaration order breaks equal-specificity ties.
+Later specified `target`, `install`, and `configure` values win; later mappings
+for the same module-relative source replace earlier mappings. Append `exclude`
+entries in merge order. `excludeReadme` defaults to true and retains its current
+value unless a later section explicitly sets it, including false. A configured
+module with no matching sections is unavailable for linking, not automatically
+linked. Whether platform selectors require whole `-`-separated component
+boundaries or retain the legacy textual-prefix match is still undecided.
+
+The YAML sequence preserves declaration order for equal-specificity ties; this
+is a deliberate change from legacy declaration-order precedence.
 
 ### YAML authoring and WIP migration cautions
 
 Existing examples are drafts, not proof that every file is valid or supported:
 
-- Write `target: "~"`, not `target: ~`; a bare `~` is YAML null.
+- Write `target: "~"`, not `target: ~`; a bare `~` is YAML null and invalid.
 - Quote paths beginning with `%`, for example `"%DOCUMENTS%/PowerShell"`.
-- Prefer forward slashes in paths. Plain YAML strings do not unescape doubled
-  backslashes copied from JSON; double-quoted YAML strings have escape rules.
+- Use `/` in YAML path fields; `\` as a path separator is invalid, not
+  converted. This restriction does not apply to shell command strings.
 - Quote shell commands where YAML punctuation could change their meaning.
 - YAML block scalars can represent multiline strings, but the existing command
   behavior rejects multiline install/configure scripts.
-- `%APPDATA%` needs a separately approved expansion rule or a supported path
-  replacement such as `"~/AppData/Roaming/..."`.
+- `%APPDATA%` expands to Windows roaming application data on Windows and is
+  unsupported on other platforms.
 - The conversion script does not copy `excludeReadme`; review it manually.
 
-Reading JSON is forbidden in the rewrite, but whether old `.alma-config.json`
-files should be automatically excluded from linking remains an explicit
-migration-safety decision. Many WIP modules contain both filenames.
+Reading JSON is forbidden in the rewrite. Always exclude both `.alma.yml` and
+`.alma-config.json` from link payloads, even without a usable module config.
+Other files in an unconfigured folder remain eligible for automatic linking.
+Many WIP modules contain both filenames. Reject explicit YAML nulls, unknown
+fields, wrong types, and missing required names or link paths; omitted optional
+fields retain their documented defaults.
 
 ## 4. CLI reference
 
@@ -331,6 +365,8 @@ Discovery and mapping details:
   A mapping for `config` can affect multiple nested files named `config`.
 - Legacy directory mapping lookup uses a module-relative path with native
   separators. This differs from file lookup and is not portable for all keys.
+  The Go migration instead uses `/`-separated module-relative paths for both
+  file and directory mappings, as approved above.
 - Exclusions are exact source paths and descendants, not globs. They filter
   candidates after traversal. Excluding a child cannot remove it from an already
   planned whole-directory symlink.
@@ -351,13 +387,18 @@ Other exceptions are not generally handled.
 
 Dry run reports proposed links and existing-target conflicts, creates no
 symlinks, and does not update link records. Its directory-creation/startup
-side effects mean it is not truly read-only in the legacy CLI.
+side effects mean it is not truly read-only in the legacy CLI. The Go dry run
+creates no directories, links, app-data, or history; real runs create missing
+parent directories for nested/remapped destinations. Existing broken symlinks
+are conflicts and are never overwritten. On a link-creation failure, continue
+with remaining candidates, retain/record successes, and exit nonzero.
 
 ### `unlink`
 
 Advertised and recognized, but currently throws an unimplemented-operation
 error. There is no working unlink, restore, or cleanup functionality to port.
-Implementing one requires a new behavioral specification.
+Implementing one requires a new behavioral specification. The Go migration
+keeps `unlink` explicitly unsupported and must never delete or restore items.
 
 ### `ls`
 
@@ -376,8 +417,10 @@ With a repository name:
 
 There is no explicit sorting or hidden-directory exclusion. The legacy command
 uses `repositoryPath` literally, unlike module commands, so home shortcuts in
-that field do not work consistently. A module at the repository root is printed
-as an empty relative name. Extra arguments are ignored; flags are not parsed.
+that field do not work consistently. The Go CLI uses the common path resolver
+for `ls` as well, including `~` and paths relative to the effective working
+directory. A module at the repository root is printed as an empty relative
+name. Extra arguments are ignored; flags are not parsed.
 
 ### `info`
 
@@ -428,9 +471,9 @@ commands are reported as unsupported and not executed. Standard output is
 forwarded line by line; standard error is inherited. Standard input is redirected,
 so these are not normal interactive terminal sessions.
 
-The application waits for completion but does not propagate or otherwise act on
-the child exit code. Neither command automatically links files or invokes the
-other command.
+The legacy application waits for completion but does not propagate or otherwise
+act on the child exit code. The Go CLI propagates a nonzero child exit status.
+Neither command automatically links files or invokes the other command.
 
 ### `readme`
 
@@ -445,6 +488,8 @@ The search is case-sensitive and does not require module configuration.
 Actual legacy defect: it searches for files literally named `Markdown`, `Text`,
 and `NoExtension` instead. Standard README filenames normally produce the
 message `No README file found. Supported formats: README.md, README.txt, README`.
+The Go CLI fixes this defect and searches the standard filenames in the
+priority order above.
 
 ### `diag`
 
@@ -473,9 +518,13 @@ including invalid configuration, unsupported shell execution, and `unlink`,
 terminate abnormally. Exact runtime stack traces are not a useful compatibility
 requirement.
 
-No automatic rollback occurs after partial linking. There is no force-overwrite,
-backup, repository registration command, automatic install-before-link workflow,
-or working link-status/unlink command.
+The Go CLI returns nonzero for invalid arguments/configuration, unknown
+repositories, unsupported operations, and any failed link creation; existing
+destination conflicts are reported skips, not command failures. It continues
+attempting remaining links after a creation failure. No automatic rollback
+occurs after partial linking. There is no force-overwrite, backup, repository
+registration command, automatic install-before-link workflow, or working
+link-status/unlink command.
 
 ## 6. Persistent link history
 
@@ -489,9 +538,9 @@ associated with the absolute module-source/final-destination pair.
 - Records are not reconciled against later external filesystem changes.
 - No existing command consumes this history to remove links.
 
-The legacy on-disk encoding is not specified here: interoperability with old
-application-data files has not been requested. Decide explicitly whether it is
-needed rather than coupling the Go rewrite to internal storage details.
+The Go CLI uses a separate new history format and ignores old C# history files:
+no import, read, overwrite, or deletion of those files. Define the new format
+in S18. The legacy on-disk encoding is not part of this migration.
 
 ## 7. Functional validation scenarios
 
@@ -505,54 +554,73 @@ policy decisions in section 8 before becoming acceptance tests.
 | Named repository with nested modules | `ls <repo>` discovers configured descendants and uses slash-separated names. |
 | Working-directory override | First valid `ALMA_WORKDIR`/`WORKDIR` controls fallback paths and shell cwd. |
 | Module without a config | `link` discovers its files using working-directory defaults. |
-| Default + Linux + Fedora settings | All matching sections contribute in declaration order; later scalar values win. |
-| Nonmatching platform sections only | Legacy behavior still permits automatic file discovery. |
+| Default + Linux + Fedora settings | Merge matching sections from least to most specific; declaration order breaks equal-specificity ties. |
+| Nonmatching platform sections only | Configured module unavailable for linking; no automatic file discovery. |
 | Unmapped root file | Link beneath the selected module destination with its original name. |
 | Explicit renamed file | Link at the mapped destination, not at the original name. |
+| Nested file mapping | `source: editor/config` matches only that module-relative file, not other files named `config`. |
 | Explicit directory mapping | One directory symlink; no individual child links. |
-| Nested unmapped file | Candidate retains relative nesting; legacy fails if its target parent is absent. |
+| Nested unmapped file | Candidate retains relative nesting; real linking creates missing target parents. |
 | Excluded source subtree | Remove matching candidates and descendants, subject to whole-directory-link caveat. |
 | README exclusion | Configured module defaults to excluding recognized root README files. |
 | Existing destination | Preserve it and report a conflict/skip; do not adopt it into newly created history. |
-| Dry run | Show candidates, no symlinks/history; document legacy directory side effects. |
-| Partial filesystem failure | Earlier successful links remain and are recorded. |
+| Dry run | Show candidates/conflicts without any filesystem writes, including app-data or destination directories. |
+| Partial filesystem failure | Continue after a failed link, retain/record successes, and exit nonzero. |
 | Install/configure absent | Informative message; no shell command runs. |
 | Install/configure present | Execute selected single-line command in effective cwd with OS-specific shell. |
 | JSON config only | New CLI must not read it as configuration. |
-| Both config formats present | Read `.alma.yml` only; legacy-JSON payload exclusion policy needs a decision. |
-| Home-only YAML target | Quoted `"~"` resolves to home; bare `~` is not a home-path string. |
-| Standard README | Intended printing differs from the current filename bug. |
+| Both config formats present | Read `.alma.yml` only; neither config filename becomes link payload. |
+| Home-only YAML target | Quoted `"~"` resolves to home; bare `~` is rejected as null. |
+| Standard README | Print first of `README.md`, `README.txt`, `README`, fixing the legacy bug. |
 | `unlink` | Legacy is unsupported; no removal semantics may be inferred from its name. |
 
-## 8. Decisions to settle before implementation
+## 8. Approved decisions and remaining policy gates
 
-The format change is approved. The following are not silently approved additions
-or fixes; they are behavior choices exposed by the source and WIP configurations.
+The following choices were explicitly approved for the Go migration. Legacy
+behavior is retained above as an observation where it differs. These choices
+do not approve unrelated legacy-defect fixes or real-dotfile rollout.
 
-1. **Defect compatibility:** which legacy defects should be fixed rather than
-   reproduced? Recommended: document differences and fix accidental failures.
-2. **Link matching:** retain basename-based file lookup, or make every `source`
-   a consistent slash-separated module-relative path?
-3. **Target folders and dry run:** create necessary parent directories in real
-   runs, and make dry runs fully read-only, including startup?
-4. **Merge rules:** preserve exclusions/README settings across sections; decide
-   whether exclusions append or override, and whether duplicate sources fail
-   or later mappings override earlier ones.
-5. **Platform applicability:** keep automatic linking when no section matches,
-   or mark such modules unavailable? Keep declaration order unless changed
-   explicitly.
-6. **Legacy files as payload:** recommend always excluding `.alma.yml` and old
-   `.alma-config.json` from links, without reading the JSON. Decide whether an
-   unconfigured folder containing only old JSON may still be linked.
-7. **Path support:** add `%APPDATA%`? Normalize copied Windows separators?
-   Resolve repository paths consistently in `ls` and other commands?
-8. **Failures and safety:** define validation, nonzero exit codes, broken-symlink
-   conflicts, unknown-repository handling, source paths escaping a module,
-   and continue-versus-stop behavior after one failed link.
-9. **Shell scope:** retain single-line Linux/Windows-only execution, or add
-   multiline scripts, interactive input, module-local cwd, and more OSes?
-10. **Deferred functionality:** implement `unlink` and/or import old link history
-    only with a separate specification covering ownership and deletion safety.
+1. **Mapping (S14, S25):** match `/`-separated module-relative sources for
+   files and directories; reject absolute and module-escaping sources. A later
+   mapping for the same source overrides an earlier one.
+2. **Merge and availability (S08–S10, S15, S25):** merge matching sections from
+   least to most specific selector (`default` always least); longer matching
+   selectors outrank shorter ones, declaration order breaks ties. Later
+   mappings/scalars win; exclusions append; `excludeReadme` defaults true and
+   changes only when explicitly set, including false. A configured module with
+   no matching section is unavailable for linking. Parse quoted Linux `ID`
+   values normally.
+3. **Filesystem effects (S05, S16–S18, S25):** dry runs are fully read-only,
+   including startup; real runs create missing target parent directories.
+   Existing broken symlinks are conflicts, not replacement targets. Continue
+   after a failed link, retain/record successes, and exit nonzero.
+4. **Payload and paths (S06, S11, S15, S25):** never link either `.alma.yml` or
+   `.alma-config.json`, including in unconfigured modules; never read JSON as
+   config. Add `%APPDATA%` expansion to Windows roaming application data only,
+   unsupported on non-Windows. Require `/` in YAML path fields; reject `\`
+   path separators, without restricting shell strings. Resolve `ls` repository
+   paths like other commands. Explicit unknown repositories are errors, never
+   implicit working-directory fallbacks.
+5. **Validation and failures (S04, S07–S08, S11, S16–S17, S24–S25):** reject
+   explicit YAML nulls, unknown fields, malformed types, and missing required
+   names/link paths; omission of optional fields retains documented defaults.
+   Invalid arguments/configuration, unknown repositories, unsupported operations,
+   and failed link creations exit nonzero. Existing-target skips alone do not.
+6. **Commands (S21–S23, S25):** keep single-line, non-interactive `sh -c` on
+   Linux and `pwsh -c` on Windows in effective working-directory cwd; do not
+   expand shell support to other OSes. Propagate a child's nonzero exit status.
+   Fix `readme` to search `README.md`, then `README.txt`, then `README`.
+7. **Deferred functionality (S18, S24):** `unlink` remains unsupported with
+   no deletion/restoration. Ignore old C# link-history files; use a separate
+   new format without import or modification of old files.
+
+**Not yet decided (S01 remains open):** whether platform selectors match whole
+`-`-separated components or legacy textual prefixes (S09–S10); how unavailability
+is reported by non-link module commands and discovery (S10–S12, S19–S22);
+source-symlink traversal and boundary behavior beyond configured `source`
+strings (S13–S14); and whether remaining legacy `info`/root-module defects
+are intentionally retained or fixed (S12, S19–S20). Seek explicit decisions or
+deferrals with affected tasks before completing S01.
 
 ## 9. Migration workflow
 
