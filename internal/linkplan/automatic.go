@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/ADIX7/alma2/internal/pathresolve"
 )
 
 // Candidate is a source/destination pair. RelativeSource uses / separators
@@ -16,8 +18,12 @@ type Candidate struct {
 
 // Automatic plans unmapped files, preserving relative directory structure.
 // Directories are traversed, never linked by default; empty directories yield
-// no candidates. Payload exclusion and explicit mappings follow in S14–S15.
+// no candidates. Payload exclusions follow in S15.
 func Automatic(moduleRoot, targetRoot string) ([]Candidate, error) {
+	return plan(moduleRoot, targetRoot, nil, pathresolve.Resolver{})
+}
+
+func plan(moduleRoot, targetRoot string, mappings map[string]string, paths pathresolve.Resolver) ([]Candidate, error) {
 	root, err := filepath.Abs(moduleRoot)
 	if err != nil {
 		return nil, fmt.Errorf("module root: %w", err)
@@ -46,18 +52,27 @@ func Automatic(moduleRoot, targetRoot string) ([]Candidate, error) {
 				continue
 			}
 			relativePath := filepath.Join(relative, child.Name())
-			if info.IsDir() {
+			modulePath := filepath.ToSlash(relativePath)
+			mappedTarget, mapped := mappings[modulePath]
+			if info.IsDir() && !mapped {
 				if err := walk(source, relativePath); err != nil {
 					return err
 				}
 				continue
 			}
-			if !info.Mode().IsRegular() {
+			if !info.IsDir() && !info.Mode().IsRegular() {
 				continue
 			}
+			target := filepath.Join(targetRoot, relativePath)
+			if mapped {
+				target, err = paths.Resolve(mappedTarget, targetRoot, true)
+				if err != nil {
+					return fmt.Errorf("mapping %q target: %w", modulePath, err)
+				}
+			}
 			candidates = append(candidates, Candidate{
-				Source: source, Target: filepath.Join(targetRoot, relativePath),
-				RelativeSource: filepath.ToSlash(relativePath),
+				Source: source, Target: target, RelativeSource: modulePath,
+				Directory: info.IsDir(),
 			})
 		}
 		return nil

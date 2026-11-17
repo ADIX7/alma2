@@ -56,7 +56,7 @@ func LoadModule(moduleDir string) (*Module, error) {
 			}
 		}
 		for j, link := range section.Links {
-			if err := sourcePath(link.Source); err != nil {
+			if err := ValidateSourcePath(link.Source); err != nil {
 				return nil, fmt.Errorf("platform %d link %d source: %w", i+1, j+1, err)
 			}
 			if link.Target == "" {
@@ -67,7 +67,7 @@ func LoadModule(moduleDir string) (*Module, error) {
 			}
 		}
 		for _, excluded := range section.Exclude {
-			if err := sourcePath(excluded); err != nil {
+			if err := ValidateSourcePath(excluded); err != nil {
 				return nil, fmt.Errorf("platform %d exclude: %w", i+1, err)
 			}
 		}
@@ -82,7 +82,8 @@ func yamlPath(value string) error {
 	return nil
 }
 
-func sourcePath(value string) error {
+// ValidateSourcePath checks module-relative YAML source and exclusion paths.
+func ValidateSourcePath(value string) error {
 	if err := yamlPath(value); err != nil {
 		return err
 	}

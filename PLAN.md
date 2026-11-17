@@ -147,7 +147,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** fixture tests verify source/target candidates and termination
     for applicable symlink cases; planning creates no directories or links.
 
-- [ ] **S14 — Apply explicit file and directory mappings**
+- [x] **S14 — Apply explicit file and directory mappings**
   - **Depends on:** S13.
   - **Scope:** renamed/absolute/home-relative targets, approved source matching,
     and single-symlink directory mappings that suppress child expansion.
@@ -385,6 +385,21 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/linkplan/automatic.go`, `internal/linkplan/automatic_test.go`, `PLAN.md`.
 - Checks: focused `go test ./internal/linkplan -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host; symlink creation tests explicitly skip if unavailable on other platforms. No real dotfiles or C# files touched.
 - Next ready step: S14 (explicit file/directory mappings).
+
+### 2026-11-17 / S14 (blocked: distinct sources sharing one destination)
+
+- Outcome: blocked; S14 remains unchecked and no mapping implementation was started. `MIGRATION.md` approves later-wins for duplicate source keys and skipping pre-existing targets, but does not settle two different candidate sources resolving to one destination.
+- Files changed: `PLAN.md` (blocker only). Read-only C# `LinkCommand.CreateLinks` indicates sequential creation: on a real run, first candidate creates the destination and later candidates skip it as existing; a dry run can show both. Candidate traversal order comes from directory enumeration, not a specified stable order.
+- Checks: no development tests for blocked S14; documentation consistency and `git diff --check` should be run after this note. S13 passed full checks and was committed separately.
+- Decision needed: retain sequential first-created-wins/second-conflicts behavior (including both dry-run candidates), or reject a duplicate planned destination before any writes? If retaining sequential behavior, should candidate order be made deterministic (for example lexical source order)?
+- Next action: record the approved policy in `MIGRATION.md`, then implement/test S14, run focused and full checks, and commit only when complete.
+
+### 2026-11-17 / S14 (approval received; complete)
+
+- Outcome: complete. User approved rejecting duplicate final destinations before any writes. Recorded policy in `MIGRATION.md`; added module-relative explicit file/directory mappings, last-wins source aliases, mapped directory child suppression, path-expression targets, and separate destination validation for the final candidate set. The earlier S14 blocker is resolved. S15 must filter excluded payloads before calling `ValidateDestinations`; S16 must run that validation before app-data or destination preparation. Existing destination conflicts remain S16/S17.
+- Files changed: `MIGRATION.md`, `internal/config/module.go` (export shared source-path validator), `internal/linkplan/automatic.go`, `internal/linkplan/mapped.go`, `internal/linkplan/mapped_test.go`, `PLAN.md` (including pre-existing uncommitted blocker entry).
+- Checks: focused `go test ./internal/linkplan ./internal/config -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. An initial vet run found unkeyed external-package test literals; fixed them and reran checks. Symlink tests run on Linux, with explicit skips if unavailable. No real dotfiles or C# files touched.
+- Next ready step: S15 (configuration and payload exclusions).
 
 ### Session entry template
 

@@ -239,6 +239,11 @@ For example, `source: config` matches the root `config` only;
 participate in automatic discovery when the module is applicable. Reject
 absolute or module-escaping configured source paths. If mappings repeat a
 source, the later mapping in merge order wins (including within a section).
+**Approved collision rule:** if two distinct effective source candidates resolve
+to the same destination, reject the whole plan before creating any directories,
+links, app-data, or history. Do not select a winner by traversal order. Check
+collisions on the final candidate set after payload exclusions; pre-existing
+destination conflicts remain ordinary non-overwriting skips.
 
 ### Platform identifiers and merging
 
@@ -402,8 +407,9 @@ Dry run reports proposed links and existing-target conflicts, creates no
 symlinks, and does not update link records. Its directory-creation/startup
 side effects mean it is not truly read-only in the legacy CLI. The Go dry run
 creates no directories, links, app-data, or history; real runs create missing
-parent directories for nested/remapped destinations. Existing broken symlinks
-are conflicts and are never overwritten. On a link-creation failure, continue
+parent directories for nested/remapped destinations. A duplicate destination
+in the final plan fails before any write, even on a dry run. Existing broken
+symlinks are conflicts and are never overwritten. On a link-creation failure, continue
 with remaining candidates, retain/record successes, and exit nonzero.
 
 ### `unlink`
@@ -578,6 +584,7 @@ policy decisions in section 8 before becoming acceptance tests.
 | Explicit renamed file | Link at the mapped destination, not at the original name. |
 | Nested file mapping | `source: editor/config` matches only that module-relative file, not other files named `config`. |
 | Explicit directory mapping | One directory symlink; no individual child links. |
+| Distinct sources with same destination | Reject final plan before any filesystem write; do not choose a first winner. |
 | Symlinked source | Skip it, including explicitly mapped symlinks and symlinked directories; never follow or link it. |
 | Nested unmapped file | Candidate retains relative nesting; real linking creates missing target parents. |
 | Excluded source subtree | Remove matching candidates and descendants, subject to whole-directory-link caveat. |
@@ -645,6 +652,12 @@ do not approve unrelated legacy-defect fixes or real-dotfile rollout.
    symlinked repository root used as the module root. Nested relative paths and
    `.` remain valid; source/destination roots explicitly configured for a
    repository are not otherwise constrained to the working directory.
+10. **Planned destination collisions (S14–S16, S25):** after payload exclusions,
+    reject the entire plan when two different effective sources resolve to the
+    same target. Reject before creating destinations, app-data, links, or history,
+    including during dry runs. Do not infer a winner from filesystem iteration
+    order. This does not change existing-target conflict skips for a single
+    candidate.
 
 These policies settle the S01 gates. Unspecified legacy behavior is not
 silently changed; new implementation ambiguities must be raised in their
