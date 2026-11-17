@@ -2,10 +2,8 @@
 package config
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -39,31 +37,9 @@ func LoadRepositories(configRoot string) ([]Repository, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read %s: %w", path, err)
 	}
-	var node yaml.Node
-	if err := yaml.NewDecoder(bytes.NewReader(data)).Decode(&node); err != nil {
-		return nil, fmt.Errorf("parse %s: %w", path, err)
-	}
-	if err := rejectNull(&node); err != nil {
-		return nil, fmt.Errorf("parse %s: %w", path, err)
-	}
-	if len(node.Content) != 1 || node.Content[0].Kind != yaml.MappingNode || !hasKey(node.Content[0], "repositories") {
-		return nil, fmt.Errorf("parse %s: expected repositories mapping", path)
-	}
-	if err := validateRepositoryTypes(node.Content[0]); err != nil {
-		return nil, fmt.Errorf("parse %s: %w", path, err)
-	}
-	decoder := yaml.NewDecoder(bytes.NewReader(data))
-	decoder.KnownFields(true)
 	var file repositoryFile
-	if err := decoder.Decode(&file); err != nil {
-		return nil, fmt.Errorf("parse %s: %w", path, err)
-	}
-	var extra any
-	if err := decoder.Decode(&extra); err != io.EOF {
-		if err == nil {
-			err = fmt.Errorf("multiple YAML documents")
-		}
-		return nil, fmt.Errorf("parse %s: %w", path, err)
+	if err := decodeStrict(data, path, &file, validateRepositoryTypes); err != nil {
+		return nil, err
 	}
 	for i, repository := range file.Repositories {
 		if strings.TrimSpace(repository.Name) == "" {
@@ -78,21 +54,12 @@ func LoadRepositories(configRoot string) ([]Repository, error) {
 	return file.Repositories, nil
 }
 
-func rejectNull(node *yaml.Node) error {
-	if node.Tag == "!!null" {
-		return fmt.Errorf("explicit YAML null at line %d", node.Line)
-	}
-	for _, child := range node.Content {
-		if err := rejectNull(child); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // yaml.v3 accepts numeric/bool scalars into Go strings, so validate the YAML
 // tags before decoding structs as well as using KnownFields for unknown keys.
 func validateRepositoryTypes(root *yaml.Node) error {
+	if !hasKey(root, "repositories") {
+		return fmt.Errorf("expected repositories mapping")
+	}
 	for i := 0; i < len(root.Content); i += 2 {
 		key, value := root.Content[i], root.Content[i+1]
 		if key.Tag != "!!str" {
@@ -120,13 +87,4 @@ func validateRepositoryTypes(root *yaml.Node) error {
 		}
 	}
 	return nil
-}
-
-func hasKey(mapping *yaml.Node, key string) bool {
-	for i := 0; i < len(mapping.Content); i += 2 {
-		if mapping.Content[i].Value == key {
-			return true
-		}
-	}
-	return false
 }

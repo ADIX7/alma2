@@ -41,7 +41,7 @@ func TestInvalidRepositoryYAML(t *testing.T) {
 		{"empty file", "", "parse"},
 		{"missing key", "other: []\n", "expected repositories"},
 		{"malformed", "repositories: [\n", "parse"},
-		{"root sequence", "- name: invalid\n", "expected repositories"},
+		{"root sequence", "- name: invalid\n", "expected YAML mapping"},
 		{"null list", "repositories: null\n", "null"},
 		{"implicit null", "repositories:\n", "null"},
 		{"null item", "repositories: [null]\n", "null"},

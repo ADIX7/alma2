@@ -98,7 +98,7 @@ project scaffolding and isolated test helpers can proceed independently.
     invalid entries, null/type handling, and refusal to read JSON or unapproved
     filename aliases. Preserve repository declaration order.
 
-- [ ] **S08 — Load and validate module YAML**
+- [x] **S08 — Load and validate module YAML**
   - **Depends on:** S07.
   - **Scope:** `.alma.yml` with ordered `platforms`, link pairs, targets,
     exclusions, README control, install/configure strings, and field presence
@@ -332,6 +332,14 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Checks: focused `go test ./internal/config -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `go mod tidy`, `gofmt`, and `git diff --check` passed. No skips. An initial focused test caught yaml.v3 accepting a numeric scalar into a string; node-type validation fixed it before completion.
 - Decisions: pinned `gopkg.in/yaml.v3 v3.0.1`; no JSON fallback or filename aliases. No real dotfiles or C# files touched.
 - Next ready step: S08 (module YAML loader).
+
+### 2026-11-17 / S08
+
+- Outcome: complete. Added strict `.alma.yml` parsing with ordered sections, optional-field presence, required link fields, source-boundary and YAML separator checks. Parsing does not execute scripts or create links; JSON-only modules remain unconfigured.
+- Files changed: `internal/config/module.go`, `internal/config/module_test.go`, shared strict decoder `internal/config/yaml.go`, refactored `internal/config/repository.go` and its test expectation, `PLAN.md`.
+- Checks: focused `go test ./internal/config -count=1`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips. Initial run exposed a changed repository root-type error message after sharing the decoder; test expectation was updated without changing rejection behavior, then all tests passed.
+- Decisions: no new behavior policies; multiline shell strings parse but execution remains restricted to S21/S22. No real dotfiles or C# files touched.
+- Next ready step: S09 (platform identifiers).
 
 ### Session entry template
 
