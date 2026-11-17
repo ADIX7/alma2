@@ -16,10 +16,6 @@ import (
 )
 
 func runInfo(inv Invocation, stdout io.Writer) int {
-	if inv.Module != "" {
-		fmt.Fprintln(stdout, "Command not implemented: module info")
-		return 1
-	}
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintln(stdout, err)
@@ -36,6 +32,9 @@ func runInfo(inv Invocation, stdout io.Writer) int {
 		return 1
 	}
 	paths := pathresolve.Current()
+	if inv.Module != "" {
+		return showModuleInfo(inv, dirs, paths, repositories, stdout)
+	}
 	if inv.Repository == "" {
 		version := "unknown"
 		if build, ok := debug.ReadBuildInfo(); ok && build.Main.Version != "" {

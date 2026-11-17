@@ -204,7 +204,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** CLI tests cover no config, empty/direct-child modules, missing
     source folders, explicit mapping counts, and approved legacy display fixes.
 
-- [ ] **S20 — Implement module `info`**
+- [x] **S20 — Implement module `info`**
   - **Depends on:** S19, S14.
   - **Scope:** resolved module settings, target display, explicit mappings,
     capability indicators, and approved existence/color behavior.
@@ -458,6 +458,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/cli/info.go`, `internal/cli/info_test.go`, `internal/cli/cli.go`, `internal/cli/cli_test.go`, `README.md`, `PLAN.md`. Inspected the C# `InfoCommand` and `VersionService` read-only.
 - Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host. No real dotfiles or C# files touched.
 - Next ready step: S20 (module info).
+
+### 2026-11-17 / S20
+
+- Outcome: complete. Module `info` now handles unconfigured and unavailable direct-child modules, resolves the final module destination and each explicit mapping target, displays install/configure capability, and colors source/actual target paths by filesystem existence. An ordinary existing file is marked present; coloring is not proof of Alma link ownership. Missing modules/unknown repositories fail nonzero.
+- Files changed: `internal/cli/module_info.go`, `internal/cli/module_info_test.go`, `internal/cli/info.go`, `internal/cli/info_test.go`, `internal/cli/cli_test.go`, `README.md`, `PLAN.md`. Inspected the C# `ColorCodes` source read-only.
+- Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host. No real dotfiles or C# files touched.
+- Next ready step: S21 (safe-to-test shell execution support); S23/S24 independently ready.
 
 ### Session entry template
 

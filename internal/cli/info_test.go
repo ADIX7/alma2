@@ -63,8 +63,4 @@ func TestRepositoryInfoSortedCountsAndCapabilities(t *testing.T) {
 	if !(strings.Index(output, "alpha  ") < strings.Index(output, "unavailable  ") && strings.Index(output, "unavailable  ") < strings.Index(output, "zeta  ")) {
 		t.Fatalf("not sorted: %q", output)
 	}
-	status, output = runFixtureCLI(t, f, "info", "fixtures", "alpha")
-	if status == 0 || !strings.Contains(output, "not implemented: module info") {
-		t.Fatalf("S20 placeholder: %d %q", status, output)
-	}
 }
