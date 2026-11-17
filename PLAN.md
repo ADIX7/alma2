@@ -309,14 +309,14 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** targeted/full local tests, Windows test cross-compilation,
     and local Docker checks pass; S26b verifies the hosted Windows run.
 
-- [ ] **S26b — Verify hosted CI and native Windows behavior**
+- [x] **S26b — Verify hosted CI and native Windows behavior**
   - **Depends on:** S26a, S26a2, S26b1, S26b2, S26b3.
   - **Scope:** run the configured hosted Linux/Windows jobs, reconcile failures
     and platform-specific skips, and record actual results.
   - **Done when:** CI jobs pass, or the step remains unchecked with an explicit
     access/run blocker and S27 stays blocked.
 
-- [ ] **S26 — Verify supported platforms and repeatable checks**
+- [x] **S26 — Verify supported platforms and repeatable checks**
   - **Depends on:** S26a, S26b.
   - **Scope:** automated formatting, vetting, tests, and build checks; add CI
     appropriate to the repository. Verify Linux and Windows behavior natively
@@ -612,6 +612,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/shell/shell_test.go`, `.github/workflows/ci.yml`, `PLAN.md`.
 - Checks: focused native Linux shell tests (Windows-only smoke skipped), full `go test ./... -count=1`, `go vet ./...`, YAML/workflow syntax, `gofmt`, Windows test cross-compilation, local Docker full check, and diff checks passed. Native PowerShell check still pending hosted S26b.
 - Next ready step: push branch, inspect hosted Linux/Windows/Docker rerun, then close S26 if all pass.
+
+### 2026-11-17 / S26b and parent S26
+
+- Outcome: complete. GitHub Actions [44150173974](https://github.com/ADIX7/alma2/actions/runs/44150173974) on `ci/s26-platform-verification` passed native Ubuntu tests/vet/build/format, native Windows tests/vet/build (including native `pwsh` smoke), and the Docker Go 1.23 test/vet/build/format job. Earlier hosted runs exposed Windows 8.3 path handling and case-sensitive fixture assumptions; both were fixed and retested. S26a/S26a2/S26b1/S26b2/S26b3/S26b and S26 are complete.
+- Files changed: `README.md`, `docs/coverage.md`, `PLAN.md` (record verified platform scope and results).
+- Checks: hosted run passed all three jobs at `e776d8e`; local `go test ./... -count=1`, `go vet ./...`, `gofmt`, documentation assertions, and `git diff --check` passed. Native Linux shell/symlink coverage and native Windows PowerShell coverage ran. Windows symlink tests may skip when creation is unavailable; Docker runs as root, so permission-dependent checks there can skip. macOS arm64/FreeBSD amd64 were cross-built only, not run natively. No real dotfiles or C# files touched.
+- Next ready step: S27 (usage guide and safe migration rehearsal with fixture-only data).
 
 ### Session entry template
 

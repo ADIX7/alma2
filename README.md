@@ -43,10 +43,12 @@ docker build -f Dockerfile.ci -t alma2-ci .
 docker run --rm alma2-ci
 ```
 
-Cross-building proves compilation, **not** runtime behavior. The Linux tests
-include native shell/symlink coverage; Windows `%APPDATA%`, shell, symlink
-permissions, and history replacement need native CI verification. POSIX
-permission tests may skip as root or where permissions are not enforced. See [MIGRATION.md](MIGRATION.md) for the agreed YAML-only
+Cross-building proves compilation, **not** runtime behavior. Native Linux and
+Windows CI plus the Docker job [passed on the verification branch](https://github.com/ADIX7/alma2/actions/runs/44150173974).
+Linux tests include native shell/symlink coverage; Windows tests include native
+PowerShell execution and history checks. Symlink tests may skip on Windows when
+creation is unavailable, and permission tests may skip as root or when filesystem
+permissions cannot be enforced. macOS and FreeBSD are cross-built, not run. See [MIGRATION.md](MIGRATION.md) for the agreed YAML-only
 behavioral contract (`repository.yml` and `.alma.yml`).
 
 Tests can use `internal/testutil.NewFixture(t)` for disposable home, config,

@@ -52,9 +52,11 @@ fixtures; the C# source and real dotfiles are read-only. `internal/e2e` builds
 
 ## Platform limits
 
-Linux `sh` and symlink tests run natively here. Windows `pwsh`, roaming
-`%APPDATA%`, symlink permissions, and history replacement are not yet exercised
-natively; Windows identifiers and shell selection have injectable unit tests.
-Native Windows verification belongs to S26. POSIX permission tests skip when
-run as root or when filesystem permissions cannot be enforced. No real-dotfile
-rollout or legacy history import has been performed.
+Linux `sh` and symlink tests run natively. Windows CI ran the full suite,
+including a native `pwsh` smoke test and history replacement, in
+[run 44150173974](https://github.com/ADIX7/alma2/actions/runs/44150173974).
+Windows symlink tests may skip if creation is unavailable; this passing run does
+not certify symlink privileges on every Windows machine. POSIX permission tests
+skip as root or where permissions cannot be enforced, including the Docker job
+running as root. macOS arm64 and FreeBSD amd64 were cross-built but not run
+natively. No real-dotfile rollout or legacy history import has been performed.
