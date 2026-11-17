@@ -21,7 +21,24 @@ go test ./...
 ```
 
 The build command writes `alma` to the current directory; use `-o` with another
-path if desired. See [MIGRATION.md](MIGRATION.md) for the agreed YAML-only
+path if desired. For repeatable local verification on Linux:
+
+```sh
+test -z "$(gofmt -l $(git ls-files '*.go'))"
+go test ./... -count=1
+go vet ./...
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+go build -o "$tmp/alma" ./cmd/alma
+GOOS=windows GOARCH=amd64 go build -o "$tmp/alma.exe" ./cmd/alma
+GOOS=darwin GOARCH=arm64 go build -o "$tmp/alma-darwin" ./cmd/alma
+GOOS=freebsd GOARCH=amd64 go build -o "$tmp/alma-freebsd" ./cmd/alma
+```
+
+[CI](.github/workflows/ci.yml) runs tests, vet, and builds on Linux and Windows.
+Cross-building proves compilation, **not** runtime behavior. The Linux tests
+include native shell/symlink coverage; Windows `%APPDATA%`, shell, symlink
+permissions, and history replacement need native CI verification. POSIX
+permission tests may skip as root or where permissions are not enforced. See [MIGRATION.md](MIGRATION.md) for the agreed YAML-only
 behavioral contract (`repository.yml` and `.alma.yml`).
 
 Tests can use `internal/testutil.NewFixture(t)` for disposable home, config,

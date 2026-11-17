@@ -273,8 +273,23 @@ project scaffolding and isolated test helpers can proceed independently.
     workflow, repeat runs, history, YAML-only discovery, and failure cases.
     Record any remaining coverage gaps explicitly.
 
-- [ ] **S26 — Verify supported platforms and repeatable checks**
+- [x] **S26a — Add CI and verify local/cross-build checks**
   - **Depends on:** S25.
+  - **Scope:** automate format/vet/test/build in CI for Linux and Windows; run
+    local native Linux checks and cross-build Windows/other agreed targets.
+  - **Done when:** workflow and documented commands are reproducible locally,
+    formatting/vet/tests pass, and cross-builds succeed without claiming native
+    Windows runtime verification.
+
+- [ ] **S26b — Verify hosted CI and native Windows behavior**
+  - **Depends on:** S26a.
+  - **Scope:** run the configured hosted Linux/Windows jobs, reconcile failures
+    and platform-specific skips, and record actual results.
+  - **Done when:** CI jobs pass, or the step remains unchecked with an explicit
+    access/run blocker and S27 stays blocked.
+
+- [ ] **S26 — Verify supported platforms and repeatable checks**
+  - **Depends on:** S26a, S26b.
   - **Scope:** automated formatting, vetting, tests, and build checks; add CI
     appropriate to the repository. Verify Linux and Windows behavior natively
     where available; build other agreed targets without implying runtime support.
@@ -534,6 +549,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `docs/coverage.md`, `internal/e2e/e2e_test.go`, `internal/cli/link_test.go`, `internal/cli/commands_test.go`, `PLAN.md`.
 - Checks: coverage assertions (26/26 scenarios, 10/10 policies, all 43 referenced test names found), focused `go test ./internal/e2e ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. Linux native shell/symlink tests ran; Windows-only behavior remains simulated or untested natively and is explicitly documented. No real dotfiles or C# files touched.
 - Next ready step: S26 (supported-platform checks and CI).
+
+### 2026-11-17 / S26a complete; S26b hosted-CI blocker
+
+- Outcome: S26a complete. Added Linux/Windows GitHub Actions test/vet/build workflow, documented local format/test/vet/build and cross-build commands, ran Linux native tests plus Windows amd64, macOS arm64, and FreeBSD amd64 cross-builds, and cross-compiled a Windows e2e test binary without running it. S26b and parent S26 remain unchecked; S27 depends on S26.
+- Files changed: `.github/workflows/ci.yml`, `README.md`, `PLAN.md`.
+- Checks: `go test ./... -count=1`, `go vet ./...`, `gofmt` check, native Linux build, three cross-builds, Windows e2e test compilation, workflow structure assertion, and `git diff --check` passed. Hosted CI and native Windows runtime tests were **not run**. Linux Go toolchain: 1.27.4-X:nodwarf5; module directive is Go 1.23.
+- Blocker/decision needed: no Windows runner or local hosted-Actions emulator is available; the workflow exists only in this local Git branch. Running hosted CI requires publishing commits to `origin`, which has not been authorized. Ask the user whether to push the branch to run GitHub Actions or have them run/publish CI themselves. Do not mark S26b/S26 complete or proceed to S27 until hosted Linux/Windows checks actually pass (or the user explicitly revises the acceptance criteria).
 
 ### Session entry template
 
