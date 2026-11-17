@@ -1,8 +1,9 @@
 # Alma (Go migration)
 
-The Go CLI is being built in steps tracked by [PLAN.md](PLAN.md). The current
-executable is a bootstrap only: it reports that command dispatch is not yet
-implemented and exits nonzero. It does not read configuration or modify files.
+The Go CLI is being built in steps tracked by [PLAN.md](PLAN.md). It currently
+supports command selection and `help`; other recognized commands report that
+they are not implemented and exit nonzero. It does not read configuration or
+modify files.
 
 Module path: `github.com/ADIX7/alma2`. Prerequisite: Go 1.23 or newer. From the
 repository root:

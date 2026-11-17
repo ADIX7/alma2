@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"os"
+
+	"github.com/ADIX7/alma2/internal/cli"
 )
 
 func main() {
-	fmt.Fprintln(os.Stderr, "alma: command dispatch not implemented")
-	os.Exit(1)
+	os.Exit(cli.Run(os.Args[1:], os.Stdout))
 }

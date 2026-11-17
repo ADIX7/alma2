@@ -66,7 +66,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** helper tests prove fixture cleanup and environment isolation;
     tests cannot write into the operator's home/config/data directories.
 
-- [ ] **S04 — Implement command dispatch and argument handling**
+- [x] **S04 — Implement command dispatch and argument handling**
   - **Depends on:** S01, S03.
   - **Scope:** command registry, `help`/`--help`/`-h`, no/unknown-command cases,
     positional conventions, and approved output/exit behavior. Unimplemented
@@ -300,6 +300,14 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Checks: focused `go test ./internal/testutil -count=1 -v` passed (fixture cleanup, home/config/data isolation, captured streams and exit code, invalid executable paths); full `go test ./... -count=1`, `go vet ./...`, `go build ./cmd/alma` to a temporary output, `gofmt` check, and `git diff --check` passed. No skips; `cmd/alma` still has no test files.
 - Decisions: no new behavior policies; YAML-only contract unchanged. No real dotfiles or C# files touched.
 - Next ready step: S04 (command dispatch and argument handling). Do not begin it in this session.
+
+### 2026-11-17 / S04
+
+- Outcome: complete. Added case-sensitive command selection, ordered help, positional/flag parsing, approved argument errors, and explicit nonzero placeholders for handlers not yet implemented.
+- Files changed: `internal/cli/cli.go`, `internal/cli/cli_test.go`, `cmd/alma/main.go`, `README.md`, `PLAN.md`.
+- Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, temporary-binary build and help/unimplemented-handler smoke checks, `gofmt`, and `git diff --check` passed. No skips; `cmd/alma` has no package-local test files.
+- Decisions: no new behavior policies; link-specific help remains an explicit placeholder until S16, diagnostics and unlink until S24. No real dotfiles or C# files touched.
+- Next ready step: S05 (startup directories and environment precedence).
 
 ### Session entry template
 
