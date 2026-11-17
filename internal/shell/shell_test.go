@@ -87,3 +87,24 @@ func TestProcessRunnerHarmlessFixtureCommands(t *testing.T) {
 		t.Fatal("cancelled process unexpectedly succeeded")
 	}
 }
+
+// Exercise the real Windows shell, not just the injected shell selector.
+func TestNativeWindowsPowerShellSmoke(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("native PowerShell test requires Windows")
+	}
+	f := testutil.NewFixture(t)
+	var out, stderr bytes.Buffer
+	if err := Execute(context.Background(), "windows", "Write-Output hello", f.Work, ProcessRunner{}, &out, &stderr); err != nil {
+		t.Fatalf("PowerShell invocation: %v, stderr=%q", err, stderr.String())
+	}
+	if strings.TrimSpace(out.String()) != "hello" || stderr.Len() != 0 {
+		t.Fatalf("PowerShell output: %q, %q", out.String(), stderr.String())
+	}
+	out.Reset()
+	err := Execute(context.Background(), "windows", "exit 7", f.Work, ProcessRunner{}, &out, &stderr)
+	var exit *exec.ExitError
+	if !errors.As(err, &exit) || exit.ExitCode() != 7 {
+		t.Fatalf("PowerShell exit status: %v", err)
+	}
+}

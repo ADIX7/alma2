@@ -302,8 +302,15 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** focused/full local tests, Windows test cross-compilation, and
     local Docker checks pass; S26b owns hosted native Windows retest.
 
+- [x] **S26b3 — Add native Windows PowerShell smoke check**
+  - **Depends on:** S26b2.
+  - **Scope:** run a harmless `pwsh -c` subprocess and check nonzero exits on
+    native Windows CI; refresh GitHub Actions to Node 24-based versions.
+  - **Done when:** targeted/full local tests, Windows test cross-compilation,
+    and local Docker checks pass; S26b verifies the hosted Windows run.
+
 - [ ] **S26b — Verify hosted CI and native Windows behavior**
-  - **Depends on:** S26a, S26a2, S26b1, S26b2.
+  - **Depends on:** S26a, S26a2, S26b1, S26b2, S26b3.
   - **Scope:** run the configured hosted Linux/Windows jobs, reconcile failures
     and platform-specific skips, and record actual results.
   - **Done when:** CI jobs pass, or the step remains unchecked with an explicit
@@ -598,6 +605,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/linkplan/mapped_test.go`, `PLAN.md`.
 - Checks: focused `go test ./internal/linkplan ./internal/pathresolve -count=1`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, Windows test cross-compilation, local Docker full check, and diff checks passed. Native Windows runtime retest still pending S26b.
 - Next ready step: push branch, inspect hosted Linux/Windows/Docker rerun.
+
+### 2026-11-17 / S26b3 native Windows shell check
+
+- Outcome: third hosted run [44149878935](https://github.com/ADIX7/alma2/actions/runs/44149878935) passed native Ubuntu, native Windows, and Docker jobs. Added a harmless native Windows PowerShell subprocess check (output and child exit status) to close the remaining shell-runtime gap; updated Actions checkout/setup-go to Node 24-based major versions. S26b remains unchecked until the new hosted run passes.
+- Files changed: `internal/shell/shell_test.go`, `.github/workflows/ci.yml`, `PLAN.md`.
+- Checks: focused native Linux shell tests (Windows-only smoke skipped), full `go test ./... -count=1`, `go vet ./...`, YAML/workflow syntax, `gofmt`, Windows test cross-compilation, local Docker full check, and diff checks passed. Native PowerShell check still pending hosted S26b.
+- Next ready step: push branch, inspect hosted Linux/Windows/Docker rerun, then close S26 if all pass.
 
 ### Session entry template
 
