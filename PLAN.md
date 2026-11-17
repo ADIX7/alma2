@@ -122,7 +122,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** tests cover default + OS + distro + architecture sections,
     duplicate sources, explicit false values, nulls, and approved merge rules.
 
-- [ ] **S11 — Resolve repository and module operation context**
+- [x] **S11 — Resolve repository and module operation context**
   - **Depends on:** S04, S05, S06, S07, S10.
   - **Scope:** named repositories, working-directory fallbacks, nested module
     names, final destination roots, unknown names, and approved boundary rules.
@@ -356,6 +356,21 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Checks: focused `go test ./internal/config -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips; YAML null validation remains covered by the loader tests.
 - Decisions: no new behavior policies; duplicate link mappings keep their first output position but use the last value. No real dotfiles or C# files touched.
 - Next ready step: S11 (repository/module operation context).
+
+### 2026-11-17 / S11 (blocked: module-name boundary policy)
+
+- Outcome: blocked; S11 remains unchecked. No implementation started. The S11 acceptance check requires unsafe-path handling, but `MIGRATION.md` explicitly approves boundary rejection for configured link sources only, not CLI module names.
+- Files changed: `PLAN.md` (this blocker only). Inspected read-only C# `LinkCommand.cs`: it combines the repository source with the CLI module token without a containment check; absolute names and `..` may leave the repository, and symlinked module directories are not explicitly rejected.
+- Checks: no development tests required or run for this blocked step; documentation consistency and `git diff --check` should be run after recording this entry. The preceding S10 commit passed its tests.
+- Decision needed: approve a boundary rule for CLI module names (absolute names, `..` escapes, and symlinked module directories/components). Do not implement or mark S11 complete until answered.
+- Next action: record the user's approved rule in `MIGRATION.md`, implement S11 with fixture tests, run focused and full checks, then commit only if complete.
+
+### 2026-11-17 / S11 (approval received; complete)
+
+- Outcome: complete. User approved rejecting absolute/escaping CLI module names and symlinked module directories/components. Recorded rule in `MIGRATION.md`; added read-only repository/module context resolution with case-sensitive repository lookup, working-directory fallbacks, YAML path expressions, nested and root modules, unavailable settings, and missing/unsafe path errors. The earlier S11 blocker is resolved.
+- Files changed: `MIGRATION.md`, `internal/operation/context.go`, `internal/operation/context_test.go`, `PLAN.md` (including pre-existing uncommitted blocker entry).
+- Checks: focused `go test ./internal/operation -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. A first focused run exposed a test using `os.IsNotExist` on a wrapped error; updated the assertion to `errors.Is`, then reran all checks. Symlink tests run on this Linux host; platform-native Windows tests deferred to S26. No real dotfiles or C# files touched.
+- Next ready step: S12 (repository/module discovery and `ls`).
 
 ### Session entry template
 

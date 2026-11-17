@@ -151,6 +151,14 @@ A module's `target` overrides the repository destination. Resolve it relative
 to the repository destination unless it is absolute or uses the home shortcut.
 Explicit link targets are resolved relative to this final module destination.
 
+**Approved Go boundary rule:** CLI module names may be `.` for the repository
+root or relative `/`-separated nested paths. Reject absolute names and names
+whose `..` components escape the selected repository. Reject a symlinked
+module directory or any symlinked component from the repository root to that
+module, even if its lexical name stays within the repository. This differs
+from the legacy `Path.Combine` behavior, which did not check containment or
+symlinks. Never traverse outside the selected source via a CLI module name.
+
 ## 3. YAML configuration contract
 
 ### Repository file
@@ -632,6 +640,11 @@ do not approve unrelated legacy-defect fixes or real-dotfile rollout.
 8. **Deferred functionality (S18, S24):** `unlink` remains unsupported with
    no deletion/restoration. Ignore old C# link-history files; use a separate
    new format without import or modification of old files.
+9. **CLI module boundary (S11, S25):** reject absolute or repository-escaping
+   module names and symlinked module directories/components, including a
+   symlinked repository root used as the module root. Nested relative paths and
+   `.` remain valid; source/destination roots explicitly configured for a
+   repository are not otherwise constrained to the working directory.
 
 These policies settle the S01 gates. Unspecified legacy behavior is not
 silently changed; new implementation ambiguities must be raised in their
