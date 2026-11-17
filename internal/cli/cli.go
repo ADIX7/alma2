@@ -85,6 +85,9 @@ func Run(args []string, stdout io.Writer) int {
 		fmt.Fprintln(stdout, err)
 		return 1
 	}
+	if inv.Command == "link" {
+		return runLink(inv, stdout)
+	}
 	if inv.Command == "ls" {
 		return runList(inv, stdout)
 	}

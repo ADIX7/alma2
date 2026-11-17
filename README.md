@@ -1,9 +1,10 @@
 # Alma (Go migration)
 
 The Go CLI is being built in steps tracked by [PLAN.md](PLAN.md). It currently
-supports `help` and `ls`: `ls` reads `repository.yml` and discovers modules
-with `.alma.yml`, without writing files. Other recognized commands report
-that they are not implemented and exit nonzero.
+supports `help`, `ls`, and a read-only `link -d`/`link --dry-run` preview.
+`ls` reads `repository.yml` and lists direct child modules with `.alma.yml`.
+Real link creation and other recognized commands are not implemented yet and
+exit nonzero.
 
 Module path: `github.com/ADIX7/alma2`. Prerequisite: Go 1.23 or newer.
 Configuration parsing uses the pinned `gopkg.in/yaml.v3` dependency (see

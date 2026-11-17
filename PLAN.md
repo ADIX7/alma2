@@ -169,7 +169,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** tests cover configured/unconfigured modules, mixed JSON/YAML
     files, all recognized README names, nested exclusions, and merged settings.
 
-- [ ] **S16 — Wire `link` dry run and conflict reporting**
+- [x] **S16 — Wire `link` dry run and conflict reporting**
   - **Depends on:** S04, S15.
   - **Scope:** `link --help`, `-d`/`--dry-run`, complete candidate output,
     destination checks, and approved dry-run/startup side-effect policy.
@@ -430,6 +430,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/linkplan/filtered.go`, `internal/linkplan/filtered_test.go`, `PLAN.md` (including earlier uncommitted blocker entry).
 - Checks: focused `go test ./internal/linkplan -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host. No real dotfiles or C# files touched.
 - Next ready step: S16 (wire `link` dry run, checking the final plan before any startup/app-data write).
+
+### 2026-11-17 / S16
+
+- Outcome: complete. Wired `link --help` and read-only `-d`/`--dry-run`: resolve repository/module and final excluded plan, reject duplicate final destinations before any writes, list proposals, and report existing file/directory/ordinary/broken-symlink conflicts using `Lstat`. Invalid names/configs, unavailable modules, and missing directories return nonzero. Real link creation stays an explicit nonzero placeholder for S17.
+- Files changed: `internal/cli/link.go`, `internal/cli/link_test.go`, `internal/cli/cli.go`, `internal/cli/cli_test.go`, `internal/cli/list_test.go` (renamed shared fixture helper), `README.md`, `PLAN.md`.
+- Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, `git diff --check`, and a temporary CLI smoke test verifying no target/app-data write passed. Symlink tests run on Linux and explicitly skip if creation unavailable. No real dotfiles or C# files touched.
+- Next ready step: S17 (real symlink creation and failure handling).
 
 ### Session entry template
 
