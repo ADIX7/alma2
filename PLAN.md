@@ -115,7 +115,7 @@ project scaffolding and isolated test helpers can proceed independently.
     unreadable release information, Windows/macOS/FreeBSD identifiers, unknown
     platforms, and Go-to-legacy architecture-name translation.
 
-- [ ] **S10 — Select and merge platform settings**
+- [x] **S10 — Select and merge platform settings**
   - **Depends on:** S08, S09.
   - **Scope:** selector matching, declaration order, scalar precedence, link
     combination, exclusions/README settings, and no-matching-section behavior.
@@ -348,6 +348,14 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Checks: focused `go test ./internal/platform -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips; non-Linux OS identifiers are fixture-simulated, not natively run.
 - Decisions: no new behavior policies; approved quoted Linux ID normalization retained. No real dotfiles or C# files changed.
 - Next ready step: S10 (platform selection and merging).
+
+### 2026-11-17 / S10
+
+- Outcome: complete. Added textual-prefix selector matching, least-to-most-specific stable merging, later scalar/mapping overrides, appended exclusions, explicit README boolean handling, and configured-module unavailability on no match.
+- Files changed: `internal/config/merge.go`, `internal/config/merge_test.go`, `PLAN.md`.
+- Checks: focused `go test ./internal/config -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips; YAML null validation remains covered by the loader tests.
+- Decisions: no new behavior policies; duplicate link mappings keep their first output position but use the last value. No real dotfiles or C# files touched.
+- Next ready step: S11 (repository/module operation context).
 
 ### Session entry template
 
