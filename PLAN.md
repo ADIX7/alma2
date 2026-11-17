@@ -251,7 +251,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** a subprocess test proves successful end-to-end behavior and
     read-only dry-run effects without invoking real dotfile scripts.
 
-- [ ] **S25b — Subprocess validation and failure-path matrix**
+- [x] **S25b — Subprocess validation and failure-path matrix**
   - **Depends on:** S25a.
   - **Scope:** malformed/JSON-only configuration, unavailable modules, unsafe
     names, final-plan collisions, partial failure, and command restrictions.
@@ -520,6 +520,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/e2e/testdata/repository.yml`, `internal/e2e/testdata/mod/.alma.yml`, `internal/e2e/e2e_test.go`, `PLAN.md` (split S25 into session-sized S25a/b/c).
 - Checks: focused `go test ./internal/e2e -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. Symlink preflight explicitly skips if unavailable. No real dotfiles or C# files touched.
 - Next ready step: S25b (subprocess failure-path matrix).
+
+### 2026-11-17 / S25b
+
+- Outcome: complete. Added disposable subprocess cases for JSON-only repository/module behavior, invalid YAML/null, unsafe/unknown names, unavailable modules, rejected collisions before any writes, partial link failures with only successful destinations in Go history, unchanged legacy metadata, rejected multiline scripts, a fake fixture shell for explicit install, and unsupported nondeleting `unlink`. S25 parent remains unchecked until S25c coverage audit.
+- Files changed: `internal/e2e/failures_test.go`, `PLAN.md`.
+- Checks: focused `go test ./internal/e2e -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. Native symlink preflight explicitly skips if unavailable; fake shell subprocess test runs on Linux only. No real dotfiles or C# files touched.
+- Next ready step: S25c (coverage matrix and remaining gaps).
 
 ### Session entry template
 
