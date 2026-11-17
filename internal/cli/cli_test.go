@@ -64,7 +64,7 @@ func TestRun(t *testing.T) {
 		{"unknown", []string{"HELP"}, "Invalid command: HELP\n", 1},
 		{"missing module", []string{"link", "-d"}, "No module specified\n", 1},
 		{"unimplemented link help", []string{"link", "--help"}, "Command not implemented: link\n", 1},
-		{"unimplemented handler", []string{"ls"}, "Command not implemented: ls\n", 1},
+		{"unimplemented handler", []string{"info"}, "Command not implemented: info\n", 1},
 		{"unimplemented unlink", []string{"unlink"}, "Command not implemented: unlink\n", 1},
 	} {
 		t.Run(tt.name, func(t *testing.T) {

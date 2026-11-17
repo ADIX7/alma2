@@ -131,7 +131,7 @@ project scaffolding and isolated test helpers can proceed independently.
 
 ### Discovery and link workflow
 
-- [ ] **S12 — Implement repository/module discovery and `ls`**
+- [x] **S12 — Implement repository/module discovery and `ls`**
   - **Depends on:** S11.
   - **Scope:** repository names and recursive YAML-configured module discovery,
     including nested/root modules and approved hidden-directory behavior.
@@ -371,6 +371,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `MIGRATION.md`, `internal/operation/context.go`, `internal/operation/context_test.go`, `PLAN.md` (including pre-existing uncommitted blocker entry).
 - Checks: focused `go test ./internal/operation -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. A first focused run exposed a test using `os.IsNotExist` on a wrapped error; updated the assertion to `errors.Is`, then reran all checks. Symlink tests run on this Linux host; platform-native Windows tests deferred to S26. No real dotfiles or C# files touched.
 - Next ready step: S12 (repository/module discovery and `ls`).
+
+### 2026-11-17 / S12
+
+- Outcome: complete. `ls` now reads only `repository.yml`, lists configured names in declaration order, resolves named repository source paths, and recursively lists valid `.alma.yml` modules including nested/root (`.`), hidden, and unavailable modules. JSON-only directories are ignored; directory symlinks are skipped; invalid YAML and unknown/missing repository paths fail nonzero.
+- Files changed: `internal/operation/discovery.go`, `internal/operation/discovery_test.go`, `internal/cli/list.go`, `internal/cli/list_test.go`, `internal/cli/cli.go`, `internal/cli/cli_test.go`, `README.md`, `PLAN.md`.
+- Checks: focused `go test ./internal/cli ./internal/operation -count=1`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check`, and a temporary executable `ls fixture` smoke test passed (no app-data write). Initial focused run exposed the old CLI placeholder test for `ls`; updated it to test the still-unimplemented `info` handler and reran all checks. Symlink tests run on Linux, with explicit skips if creation is unavailable. No real dotfiles or C# files changed.
+- Next ready step: S13 (automatic link candidate planning).
 
 ### Session entry template
 
