@@ -50,7 +50,7 @@ project scaffolding and isolated test helpers can proceed independently.
     observations; each open item is resolved or explicitly deferred with affected
     tasks identified. Do not check this off on recommendations alone.
 
-- [ ] **S02 — Bootstrap the Go executable**
+- [x] **S02 — Bootstrap the Go executable**
   - **Depends on:** none.
   - **Scope:** initialize the Go module and minimal `alma` entry point; document
     the module path/toolchain choice and reproducible local build/test commands.
@@ -284,6 +284,14 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Checks: S01 documentation assertions and `git diff --check` passed. No Go module or executable tests exist yet; no executable tests were run or claimed to pass.
 - Decisions: all S01 policy gates resolved in `MIGRATION.md` §8; old-history import and `unlink` deferred explicitly. Unspecified legacy behavior is not silently changed.
 - Next ready step: S02 (Go executable bootstrap). Do not begin it in this session.
+
+### 2026-11-17 / S02
+
+- Outcome: complete. Bootstrapped `github.com/ADIX7/alma2` with a Go 1.23 module and an `alma` entry point that explicitly fails until command dispatch is implemented; no configuration or filesystem behavior added.
+- Files changed: `go.mod`, `cmd/alma/main.go`, `README.md` (prerequisite and reproducible build/test commands), `PLAN.md` (progress and handoff).
+- Checks: `gofmt` check, `go build -o <temporary path> ./cmd/alma`, disposable-binary smoke check (exit 1, expected stderr, empty stdout), `go test ./...`, and `git diff --check` passed. `go test` reported no test files; executable test helpers start in S03.
+- Decisions: no new behavior policies; YAML-only contract unchanged. No real dotfiles or C# files touched.
+- Next ready step: S03 (isolated filesystem/CLI test helpers). Do not begin it in this session.
 
 ### Session entry template
 
