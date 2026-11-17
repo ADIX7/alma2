@@ -35,13 +35,23 @@ func (r Resolver) Resolve(value, base string, fromYAML bool) (string, error) {
 	if fromYAML && strings.Contains(value, `\`) {
 		return "", fmt.Errorf("YAML path must use / separators: %q", value)
 	}
-	hasHome := strings.Contains(value, "~")
-	if hasHome {
+	// Windows short directory names such as RUNNER~1 contain a literal tilde.
+	// Expand only home tokens; preserve the short-name suffix in YAML paths.
+	var expanded strings.Builder
+	hasHome := false
+	for i := 0; i < len(value); i++ {
+		if value[i] != '~' || (r.OS == "windows" && i > 0 && i+1 < len(value) &&
+			isAlphaNumeric(value[i-1]) && value[i+1] >= '0' && value[i+1] <= '9') {
+			expanded.WriteByte(value[i])
+			continue
+		}
 		if r.Home == "" {
 			return "", fmt.Errorf("home directory unavailable")
 		}
-		value = strings.ReplaceAll(value, "~", r.Home)
+		hasHome = true
+		expanded.WriteString(r.Home)
 	}
+	value = expanded.String()
 	if strings.Contains(value, "%DOCUMENTS%") {
 		if r.Documents == "" {
 			return "", fmt.Errorf("Documents directory unavailable")
@@ -59,4 +69,8 @@ func (r Resolver) Resolve(value, base string, fromYAML bool) (string, error) {
 		value = filepath.Join(base, value)
 	}
 	return filepath.Clean(value), nil
+}
+
+func isAlphaNumeric(c byte) bool {
+	return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9'
 }

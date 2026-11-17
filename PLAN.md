@@ -288,8 +288,15 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** container build/test/vet/format/build passes locally and the
     workflow defines the container job (hosted outcome is verified in S26b).
 
+- [x] **S26b1 — Repair Windows failures from first hosted run**
+  - **Depends on:** S26a2.
+  - **Scope:** distinguish Windows 8.3 short-name tildes from home tokens and
+    make README-case fixture portable on case-insensitive filesystems.
+  - **Done when:** focused/full local tests, Windows test cross-compilation, and
+    local Docker checks pass; S26b owns hosted native Windows retest.
+
 - [ ] **S26b — Verify hosted CI and native Windows behavior**
-  - **Depends on:** S26a, S26a2.
+  - **Depends on:** S26a, S26a2, S26b1.
   - **Scope:** run the configured hosted Linux/Windows jobs, reconcile failures
     and platform-specific skips, and record actual results.
   - **Done when:** CI jobs pass, or the step remains unchecked with an explicit
@@ -570,6 +577,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `.github/workflows/ci.yml`, `.dockerignore`, `Dockerfile.ci`, `scripts/ci.sh`, `README.md`, `PLAN.md`.
 - Checks: local `docker build -f Dockerfile.ci -t alma2-ci .` and `docker run --rm alma2-ci` passed format, full Go tests, vet, and build inside Go 1.23 container. Full native `go test ./... -count=1`, `go vet ./...`, YAML syntax, shell syntax, formatting and diff checks passed. Docker runs as root, so permission-dependent test skips do not substitute for native Linux/Windows jobs.
 - Next ready step: S26b; push an isolated branch and inspect hosted Linux, Windows, and Docker jobs.
+
+### 2026-11-17 / S26b1 Windows native-run remediation
+
+- Outcome: first hosted run [44149132417](https://github.com/ADIX7/alma2/actions/runs/44149132417) passed native Ubuntu and Docker jobs, failed native Windows tests. A Windows 8.3 directory `RUNNER~1` was incorrectly expanded as the Alma home token, corrupting absolute YAML paths. A README case fixture also assumed case-sensitive names. Fixed both and adjusted the home-anywhere test's Windows-normalized expected path. S26b remains unchecked until hosted retest passes.
+- Files changed: `internal/pathresolve/pathresolve.go`, `internal/pathresolve/pathresolve_test.go`, `internal/linkplan/filtered_test.go`, `PLAN.md`.
+- Checks: focused `go test ./internal/pathresolve ./internal/linkplan ./internal/cli -count=1`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, Windows test-binary cross-compilation (pathresolve/linkplan/cli/e2e), local Docker build/run full checks, and `git diff --check` passed. Native Windows runtime fix still unverified until S26b.
+- Next ready step: push branch, inspect hosted Linux/Windows/Docker rerun, fix remaining failures before S26b completion.
 
 ### Session entry template
 

@@ -19,7 +19,7 @@ func TestResolvePaths(t *testing.T) {
 	}{
 		{"home only", "~", f.Target, f.Home, true},
 		{"home relative", "~/.config/fish", f.Target, filepath.Join(f.Home, ".config", "fish"), true},
-		{"home anywhere bypasses base", "before~/after", f.Target, filepath.Clean("before" + f.Home + "/after"), true},
+		{"home anywhere bypasses base", "before~/after", f.Target, filepath.Clean(filepath.FromSlash("before" + f.Home + "/after")), true},
 		{"documents", "%DOCUMENTS%/PowerShell", f.Target, filepath.Join(documents, "PowerShell"), true},
 		{"relative", "shell/fish", f.Target, filepath.Join(f.Target, "shell", "fish"), true},
 		{"absolute", filepath.ToSlash(filepath.Join(f.Root, "absolute")), f.Target, filepath.Join(f.Root, "absolute"), true},
@@ -63,5 +63,18 @@ func TestResolveErrorsAndWindowsAppData(t *testing.T) {
 	}
 	if strings.Contains(got, "%APPDATA%") {
 		t.Fatal("APPDATA token not expanded")
+	}
+}
+
+func TestWindowsShortPathTildeIsNotHomeToken(t *testing.T) {
+	value := "C:/Users/RUNNER~1/AppData/repository"
+	r := Resolver{OS: "windows", Home: "/home/fixture"}
+	got, err := r.Resolve(value, "", true)
+	if err != nil || got != filepath.Clean(filepath.FromSlash(value)) {
+		t.Fatalf("Windows short path = %q, %v", got, err)
+	}
+	r.Home = ""
+	if got, err := r.Resolve(value, "", true); err != nil || got != filepath.Clean(filepath.FromSlash(value)) {
+		t.Fatalf("short path requires home: %q, %v", got, err)
 	}
 }

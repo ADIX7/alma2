@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -23,22 +24,32 @@ func relativeCandidates(candidates []Candidate) []string {
 func TestPlanConfiguredAndUnconfiguredPayloads(t *testing.T) {
 	f := testutil.NewFixture(t)
 	root := filepath.Join(f.Repository, "fish")
-	for _, name := range []string{
+	names := []string{
 		".alma.yml", ".alma-config.json", ".alma.yaml", "README.md", "README.txt", "README",
-		"readme.md", "nested/README.md", "nested/.alma.yml", "nested/.alma-config.json", "nested/file",
-	} {
+		"nested/README.md", "nested/.alma.yml", "nested/.alma-config.json", "nested/file",
+	}
+	if runtime.GOOS != "windows" { // Windows treats readme.md and README.md as the same file.
+		names = append(names, "readme.md")
+	}
+	for _, name := range names {
 		f.WriteFile(t, "repository/fish/"+name, "fixture")
 	}
 	paths := pathresolve.Resolver{OS: "linux"}
 	unconfigured := config.Select(nil, "linux-x64")
 	got, err := Plan(root, f.Target, unconfigured, paths)
-	want := []string{".alma.yaml", "README", "README.md", "README.txt", "nested/README.md", "nested/file", "readme.md"}
+	want := []string{".alma.yaml", "README", "README.md", "README.txt", "nested/README.md", "nested/file"}
+	if runtime.GOOS != "windows" {
+		want = append(want, "readme.md")
+	}
 	if err != nil || !reflect.DeepEqual(relativeCandidates(got), want) {
 		t.Fatalf("unconfigured: %v, %v; want %v", relativeCandidates(got), err, want)
 	}
 	configured := config.Select(&config.Module{Platforms: []config.Platform{{Selector: "default"}}}, "linux-x64")
 	got, err = Plan(root, f.Target, configured, paths)
-	want = []string{".alma.yaml", "nested/README.md", "nested/file", "readme.md"}
+	want = []string{".alma.yaml", "nested/README.md", "nested/file"}
+	if runtime.GOOS != "windows" {
+		want = append(want, "readme.md")
+	}
 	if err != nil || !reflect.DeepEqual(relativeCandidates(got), want) {
 		t.Fatalf("configured default README: %v, %v; want %v", relativeCandidates(got), err, want)
 	}
