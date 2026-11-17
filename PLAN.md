@@ -39,7 +39,7 @@ project scaffolding and isolated test helpers can proceed independently.
 
 ### Foundation and contract
 
-- [ ] **S01 — Resolve migration behavior policies**
+- [x] **S01 — Resolve migration behavior policies**
   - **Depends on:** none.
   - **Scope:** review `MIGRATION.md` §8 with the user. Record approved choices
     for mapping, merges, platform applicability, paths, dry-run side effects,
@@ -279,12 +279,11 @@ history as dated entries; replace stale next-action guidance explicitly.
 
 ### 2026-11-17 / S01
 
-- Outcome: partial/blocked; approved policies from the user interview are recorded in `MIGRATION.md` §8. S01 remains unchecked; no Go implementation or real-dotfile changes.
-- Files changed: `MIGRATION.md` (approved matching, merges, platform precedence/applicability, YAML validation, paths, link safety, scripts, readme, deferred history/unlink, acceptance scenarios); `PLAN.md` (this handoff).
-- Checks: document consistency assertions and `git diff --check` passed. No Go module or executable tests exist yet.
-- Approved decisions: see `MIGRATION.md` §8; legacy behavior remains identified separately.
-- Blockers: platform selector component boundaries versus textual prefix (S09–S10); handling unavailable modules for non-link commands/discovery (S10–S12, S19–S22); source symlink traversal/boundary policy (S13–S14); and remaining `info`/root-module defects (S12, S19–S20). These need explicit answers or deferral with impacted tasks; no unapproved behavior is inferred.
-- Next action: settle or explicitly defer those policy gates, starting with platform selector matching; then run document checks and only mark S01 complete when its acceptance condition is met. S02 is independently ready; do not start it within S01.
+- Outcome: complete. Approved policies recorded in `MIGRATION.md` §8; no Go implementation or real-dotfile changes.
+- Files changed: `MIGRATION.md` (textual-prefix matching, unavailable-module command behavior, source-symlink exclusion, root-module `ls`, and `info` fixes); `PLAN.md` (S01 completion and handoff). Earlier approved S01 decisions were already present in the clean baseline.
+- Checks: S01 documentation assertions and `git diff --check` passed. No Go module or executable tests exist yet; no executable tests were run or claimed to pass.
+- Decisions: all S01 policy gates resolved in `MIGRATION.md` §8; old-history import and `unlink` deferred explicitly. Unspecified legacy behavior is not silently changed.
+- Next ready step: S02 (Go executable bootstrap). Do not begin it in this session.
 
 ### Session entry template
 

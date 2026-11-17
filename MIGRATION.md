@@ -272,8 +272,11 @@ for the same module-relative source replace earlier mappings. Append `exclude`
 entries in merge order. `excludeReadme` defaults to true and retains its current
 value unless a later section explicitly sets it, including false. A configured
 module with no matching sections is unavailable for linking, not automatically
-linked. Whether platform selectors require whole `-`-separated component
-boundaries or retain the legacy textual-prefix match is still undecided.
+linked. Retain the legacy textual-prefix selector match (not component-aware):
+`linux-fed` can match `linux-fedora-x64`. `default` remains an exact special
+selector. `ls` includes unavailable configured modules, `readme` works, and
+`info` reports their unavailability; `link`, `install`, and `configure` refuse
+to act on them.
 
 The YAML sequence preserves declaration order for equal-specificity ties; this
 is a deliberate change from legacy declaration-order precedence.
@@ -370,6 +373,8 @@ Discovery and mapping details:
 - Exclusions are exact source paths and descendants, not globs. They filter
   candidates after traversal. Excluding a child cannot remove it from an already
   planned whole-directory symlink.
+- Approved Go safety rule: skip source symlinks entirely, including symlinked
+  directories and explicitly mapped symlink sources; do not follow or link them.
 - With no module config, README files are not automatically excluded. A resolved
   configuration has `excludeReadme: true` by default.
 - Link sources are absolute paths. Moving the repository can break them.
@@ -419,8 +424,9 @@ There is no explicit sorting or hidden-directory exclusion. The legacy command
 uses `repositoryPath` literally, unlike module commands, so home shortcuts in
 that field do not work consistently. The Go CLI uses the common path resolver
 for `ls` as well, including `~` and paths relative to the effective working
-directory. A module at the repository root is printed as an empty relative
-name. Extra arguments are ignored; flags are not parsed.
+directory. The legacy CLI prints a repository-root module as an empty name;
+the Go CLI prints `.` instead. An unavailable configured module is still listed.
+Extra arguments are ignored; flags are not parsed.
 
 ### `info`
 
@@ -446,8 +452,11 @@ Legacy caveats: empty repository results can fail instead of printing an empty
 list; a configured repository-root module can fail during name generation;
 module target display does not consistently apply the repository destination
 base; target coloring checks the source key beneath the module target rather
-than the actual mapped destination. Treat the display as informational, not a
-reliable link-status command.
+than the actual mapped destination. The Go CLI handles empty repositories
+and repository-root modules without errors, resolves displayed targets
+consistently, and checks each mapping's actual destination for its existence
+indicator. For an unavailable module it reports unavailability. The display
+remains informational, not proof of link ownership/correctness.
 
 ### `install` and `configure`
 
@@ -552,6 +561,7 @@ policy decisions in section 8 before becoming acceptance tests.
 | --- | --- |
 | No configured repositories | `ls` prints its repository heading and no names. |
 | Named repository with nested modules | `ls <repo>` discovers configured descendants and uses slash-separated names. |
+| Repository-root or unavailable module | `ls` shows root as `.` and includes unavailable configured modules; `info` reports unavailability, `readme` works, and `link`/`install`/`configure` refuse. |
 | Working-directory override | First valid `ALMA_WORKDIR`/`WORKDIR` controls fallback paths and shell cwd. |
 | Module without a config | `link` discovers its files using working-directory defaults. |
 | Default + Linux + Fedora settings | Merge matching sections from least to most specific; declaration order breaks equal-specificity ties. |
@@ -560,6 +570,7 @@ policy decisions in section 8 before becoming acceptance tests.
 | Explicit renamed file | Link at the mapped destination, not at the original name. |
 | Nested file mapping | `source: editor/config` matches only that module-relative file, not other files named `config`. |
 | Explicit directory mapping | One directory symlink; no individual child links. |
+| Symlinked source | Skip it, including explicitly mapped symlinks and symlinked directories; never follow or link it. |
 | Nested unmapped file | Candidate retains relative nesting; real linking creates missing target parents. |
 | Excluded source subtree | Remove matching candidates and descendants, subject to whole-directory-link caveat. |
 | README exclusion | Configured module defaults to excluding recognized root README files. |
@@ -582,14 +593,18 @@ do not approve unrelated legacy-defect fixes or real-dotfile rollout.
 
 1. **Mapping (S14, S25):** match `/`-separated module-relative sources for
    files and directories; reject absolute and module-escaping sources. A later
-   mapping for the same source overrides an earlier one.
+   mapping for the same source overrides an earlier one. Skip all source
+   symlinks, including explicitly mapped ones and symlinked directories; never
+   follow or link them (S13–S14, S25).
 2. **Merge and availability (S08–S10, S15, S25):** merge matching sections from
    least to most specific selector (`default` always least); longer matching
    selectors outrank shorter ones, declaration order breaks ties. Later
    mappings/scalars win; exclusions append; `excludeReadme` defaults true and
    changes only when explicitly set, including false. A configured module with
-   no matching section is unavailable for linking. Parse quoted Linux `ID`
-   values normally.
+   no matching section is unavailable for `link`/`install`/`configure`;
+   `ls` includes it, `info` reports unavailability, and `readme` still works.
+   Retain textual-prefix matching (even partial components), with exact special
+   `default`; parse quoted Linux `ID` values normally.
 3. **Filesystem effects (S05, S16–S18, S25):** dry runs are fully read-only,
    including startup; real runs create missing target parent directories.
    Existing broken symlinks are conflicts, not replacement targets. Continue
@@ -610,17 +625,17 @@ do not approve unrelated legacy-defect fixes or real-dotfile rollout.
    Linux and `pwsh -c` on Windows in effective working-directory cwd; do not
    expand shell support to other OSes. Propagate a child's nonzero exit status.
    Fix `readme` to search `README.md`, then `README.txt`, then `README`.
-7. **Deferred functionality (S18, S24):** `unlink` remains unsupported with
+7. **Information fixes (S12, S19–S20, S25):** `ls` prints `.` for a repository-root
+   module. `info` handles empty repositories/root modules, resolves target
+   displays consistently, checks actual mapped destinations for existence,
+   and reports unavailable modules. Existence is not link-ownership proof.
+8. **Deferred functionality (S18, S24):** `unlink` remains unsupported with
    no deletion/restoration. Ignore old C# link-history files; use a separate
    new format without import or modification of old files.
 
-**Not yet decided (S01 remains open):** whether platform selectors match whole
-`-`-separated components or legacy textual prefixes (S09–S10); how unavailability
-is reported by non-link module commands and discovery (S10–S12, S19–S22);
-source-symlink traversal and boundary behavior beyond configured `source`
-strings (S13–S14); and whether remaining legacy `info`/root-module defects
-are intentionally retained or fixed (S12, S19–S20). Seek explicit decisions or
-deferrals with affected tasks before completing S01.
+These policies settle the S01 gates. Unspecified legacy behavior is not
+silently changed; new implementation ambiguities must be raised in their
+respective steps. No real-dotfile rollout is authorized.
 
 ## 9. Migration workflow
 
