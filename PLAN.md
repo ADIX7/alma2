@@ -90,7 +90,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** tests cover base-directory combination, home-only paths,
     platform-specific cases, and unsupported tokens according to policy.
 
-- [ ] **S07 — Load and validate repository YAML**
+- [x] **S07 — Load and validate repository YAML**
   - **Depends on:** S01, S02, S03.
   - **Scope:** `repository.yml`, repository entries, optional paths, missing-file
     defaults, and approved validation. Select/document the YAML dependency.
@@ -324,6 +324,14 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Checks: focused `go test ./internal/pathresolve -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips; Windows `%APPDATA%` behavior was simulated on Linux, not natively run on Windows.
 - Decisions: no new behavior policies; unknown tokens remain literal. No real dotfiles or C# files touched.
 - Next ready step: S07 (repository YAML loader). Callers must flag YAML path fields when resolving them.
+
+### 2026-11-17 / S07
+
+- Outcome: complete. Added strict, ordered `repository.yml` loading with missing-file empty default; rejects nulls, unknown/duplicate fields, malformed types, missing names, backslash paths, and multiple documents. Legacy JSON and `.yaml` aliases are never read.
+- Files changed: `internal/config/repository.go`, `internal/config/repository_test.go`, `go.mod`, `go.sum`, `README.md` (YAML dependency), `PLAN.md`.
+- Checks: focused `go test ./internal/config -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `go mod tidy`, `gofmt`, and `git diff --check` passed. No skips. An initial focused test caught yaml.v3 accepting a numeric scalar into a string; node-type validation fixed it before completion.
+- Decisions: pinned `gopkg.in/yaml.v3 v3.0.1`; no JSON fallback or filename aliases. No real dotfiles or C# files touched.
+- Next ready step: S08 (module YAML loader).
 
 ### Session entry template
 

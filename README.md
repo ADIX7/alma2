@@ -5,8 +5,10 @@ supports command selection and `help`; other recognized commands report that
 they are not implemented and exit nonzero. It does not read configuration or
 modify files.
 
-Module path: `github.com/ADIX7/alma2`. Prerequisite: Go 1.23 or newer. From the
-repository root:
+Module path: `github.com/ADIX7/alma2`. Prerequisite: Go 1.23 or newer.
+Configuration parsing uses the pinned `gopkg.in/yaml.v3` dependency (see
+`go.mod`/`go.sum`); a clean build needs it in the module cache or access to a
+Go module proxy. From the repository root:
 
 ```sh
 go build -o alma ./cmd/alma
