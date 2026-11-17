@@ -162,7 +162,7 @@ project scaffolding and isolated test helpers can proceed independently.
     immediate configured children; fixtures confirm root/deeper configs are
     not modules and the full test suite passes.
 
-- [ ] **S15 — Apply configuration and payload exclusions**
+- [x] **S15 — Apply configuration and payload exclusions**
   - **Depends on:** S14, S14a.
   - **Scope:** `.alma.yml`, approved legacy-config exclusions, source subtrees,
     default/explicit README settings, and directory-link exclusion limitations.
@@ -423,6 +423,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `MIGRATION.md`, `PLAN.md`, `internal/operation/context.go`, `internal/operation/discovery.go`, related operation/CLI tests.
 - Checks: `go test ./internal/operation ./internal/cli -count=1`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host; symlink tests explicitly skip if creation unavailable.
 - Next action: implement S15, keeping the historical S11/S12 handoff notes as records of prior behavior.
+
+### 2026-11-17 / S15 (flat layout clarified; complete)
+
+- Outcome: complete. Flat modules place protected config files at module root; the earlier nested-module blocker is resolved. Added read-only final planning: always filter `.alma.yml`/`.alma-config.json` candidates (including explicitly mapped files), filter exact/descendant source exclusions, apply configured root README default/explicit false, and reject collisions only after filtering. A mapped directory remains one link: excluding a child cannot change that link, while excluding the directory itself removes it. No CLI linking or filesystem writes added.
+- Files changed: `internal/linkplan/filtered.go`, `internal/linkplan/filtered_test.go`, `PLAN.md` (including earlier uncommitted blocker entry).
+- Checks: focused `go test ./internal/linkplan -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host. No real dotfiles or C# files touched.
+- Next ready step: S16 (wire `link` dry run, checking the final plan before any startup/app-data write).
 
 ### Session entry template
 
