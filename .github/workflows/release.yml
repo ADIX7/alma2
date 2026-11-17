@@ -1,0 +1,49 @@
+name: Draft release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require main branch
+        run: test "$GITHUB_REF" = refs/heads/main
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Test
+        run: go test ./... -count=1
+
+  build:
+    needs: verify
+    uses: ./.github/workflows/build.yml
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: alma-*
+          path: dist
+          merge-multiple: true
+      - name: Verify binaries
+        run: |
+          for name in linux-386 linux-amd64 linux-arm linux-arm64 windows-386.exe windows-amd64.exe windows-arm64.exe; do
+            test -s "dist/alma-$name"
+          done
+          test "$(find dist -maxdepth 1 -type f | wc -l)" -eq 7
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="build-$(date -u +%Y%m%d)-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag" dist/* --draft --target "$GITHUB_SHA" --title "$tag" --generate-notes

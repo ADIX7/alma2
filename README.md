@@ -144,7 +144,8 @@ GOOS=freebsd GOARCH=amd64 go build -o "$tmp/alma-freebsd" ./cmd/alma
 [CI](.github/workflows/ci.yml) also uploads binaries from each push and pull
 request as workflow artifacts: Linux `386`, `amd64`, `arm`, `arm64` and Windows
 `386`, `amd64`, `arm64` (with `.exe`). Go does not support `windows/arm`.
-Artifacts are not published as releases. CI tests/vets/builds on native
+CI artifacts require a GitHub login to download; the manual draft release workflow
+can publish publicly downloadable binaries. CI tests/vets/builds on native
 Ubuntu and Windows, and runs the disposable rehearsal on Ubuntu and in a
 Dockerized Linux job using [`Dockerfile.ci`](Dockerfile.ci) and
 [`scripts/ci.sh`](scripts/ci.sh). Run that job locally with:
@@ -153,6 +154,17 @@ Dockerized Linux job using [`Dockerfile.ci`](Dockerfile.ci) and
 docker build -f Dockerfile.ci -t alma2-ci .
 docker run --rm alma2-ci
 ```
+
+## Manual releases
+
+To prepare public downloads, open **Actions → Draft release → Run workflow** on
+`main`. No version input is needed. The workflow tests the app, uses the same
+seven-target build workflow as CI, and creates a **draft** GitHub Release with
+all seven binaries. Its tag is `build-YYYYMMDD-<run number>`, based on UTC date
+and that workflow's run number. Review the draft under **Releases**, edit its
+name/notes if desired, then publish it to make the binaries downloadable without
+a GitHub account. Do not rerun an already successful release workflow: its tag
+already exists.
 
 The native Linux, native Windows, and Docker jobs
 [passed with fixture rehearsal](https://github.com/ADIX7/alma2/actions/runs/44154244613).
