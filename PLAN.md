@@ -281,8 +281,15 @@ project scaffolding and isolated test helpers can proceed independently.
     formatting/vet/tests pass, and cross-builds succeed without claiming native
     Windows runtime verification.
 
-- [ ] **S26b — Verify hosted CI and native Windows behavior**
+- [x] **S26a2 — Add a containerized Linux CI check**
   - **Depends on:** S26a.
+  - **Scope:** build a reproducible Go test image, exercise the image locally,
+    and run it as an additional Docker job in hosted CI.
+  - **Done when:** container build/test/vet/format/build passes locally and the
+    workflow defines the container job (hosted outcome is verified in S26b).
+
+- [ ] **S26b — Verify hosted CI and native Windows behavior**
+  - **Depends on:** S26a, S26a2.
   - **Scope:** run the configured hosted Linux/Windows jobs, reconcile failures
     and platform-specific skips, and record actual results.
   - **Done when:** CI jobs pass, or the step remains unchecked with an explicit
@@ -556,6 +563,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `.github/workflows/ci.yml`, `README.md`, `PLAN.md`.
 - Checks: `go test ./... -count=1`, `go vet ./...`, `gofmt` check, native Linux build, three cross-builds, Windows e2e test compilation, workflow structure assertion, and `git diff --check` passed. Hosted CI and native Windows runtime tests were **not run**. Linux Go toolchain: 1.27.4-X:nodwarf5; module directive is Go 1.23.
 - Blocker/decision needed: no Windows runner or local hosted-Actions emulator is available; the workflow exists only in this local Git branch. Running hosted CI requires publishing commits to `origin`, which has not been authorized. Ask the user whether to push the branch to run GitHub Actions or have them run/publish CI themselves. Do not mark S26b/S26 complete or proceed to S27 until hosted Linux/Windows checks actually pass (or the user explicitly revises the acceptance criteria).
+
+### 2026-11-17 / S26a2 Docker CI fixture
+
+- Outcome: complete. Added `Dockerfile.ci`, `.dockerignore`, `scripts/ci.sh`, a Docker build/run job in GitHub Actions, and local container instructions. Explicit Docker job complements native Linux/Windows jobs; running it locally does not count as hosted CI verification. S26b and S26 remain unchecked pending GitHub Actions.
+- Files changed: `.github/workflows/ci.yml`, `.dockerignore`, `Dockerfile.ci`, `scripts/ci.sh`, `README.md`, `PLAN.md`.
+- Checks: local `docker build -f Dockerfile.ci -t alma2-ci .` and `docker run --rm alma2-ci` passed format, full Go tests, vet, and build inside Go 1.23 container. Full native `go test ./... -count=1`, `go vet ./...`, YAML syntax, shell syntax, formatting and diff checks passed. Docker runs as root, so permission-dependent test skips do not substitute for native Linux/Windows jobs.
+- Next ready step: S26b; push an isolated branch and inspect hosted Linux, Windows, and Docker jobs.
 
 ### Session entry template
 

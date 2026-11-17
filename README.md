@@ -34,7 +34,15 @@ GOOS=darwin GOARCH=arm64 go build -o "$tmp/alma-darwin" ./cmd/alma
 GOOS=freebsd GOARCH=amd64 go build -o "$tmp/alma-freebsd" ./cmd/alma
 ```
 
-[CI](.github/workflows/ci.yml) runs tests, vet, and builds on Linux and Windows.
+[CI](.github/workflows/ci.yml) runs tests, vet, and builds on Linux and Windows,
+plus an additional Dockerized Linux job using [`Dockerfile.ci`](Dockerfile.ci)
+and [`scripts/ci.sh`](scripts/ci.sh). To run that job locally:
+
+```sh
+docker build -f Dockerfile.ci -t alma2-ci .
+docker run --rm alma2-ci
+```
+
 Cross-building proves compilation, **not** runtime behavior. The Linux tests
 include native shell/symlink coverage; Windows `%APPDATA%`, shell, symlink
 permissions, and history replacement need native CI verification. POSIX

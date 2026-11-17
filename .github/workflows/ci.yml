@@ -25,3 +25,12 @@ jobs:
       - name: Formatting (Linux)
         if: runner.os == 'Linux'
         run: test -z "$(gofmt -l $(git ls-files '*.go'))"
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build CI image
+        run: docker build -f Dockerfile.ci -t alma2-ci .
+      - name: Run CI container
+        run: docker run --rm alma2-ci
