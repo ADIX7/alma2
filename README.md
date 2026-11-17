@@ -141,9 +141,13 @@ GOOS=darwin GOARCH=arm64 go build -o "$tmp/alma-darwin" ./cmd/alma
 GOOS=freebsd GOARCH=amd64 go build -o "$tmp/alma-freebsd" ./cmd/alma
 ```
 
-[CI](.github/workflows/ci.yml) tests/vets/builds on native Ubuntu and Windows,
-and runs the disposable rehearsal on Ubuntu and in a Dockerized Linux job using [`Dockerfile.ci`](Dockerfile.ci)
-and [`scripts/ci.sh`](scripts/ci.sh). Run that job locally with:
+[CI](.github/workflows/ci.yml) also uploads binaries from each push and pull
+request as workflow artifacts: Linux `386`, `amd64`, `arm`, `arm64` and Windows
+`386`, `amd64`, `arm64` (with `.exe`). Go does not support `windows/arm`.
+Artifacts are not published as releases. CI tests/vets/builds on native
+Ubuntu and Windows, and runs the disposable rehearsal on Ubuntu and in a
+Dockerized Linux job using [`Dockerfile.ci`](Dockerfile.ci) and
+[`scripts/ci.sh`](scripts/ci.sh). Run that job locally with:
 
 ```sh
 docker build -f Dockerfile.ci -t alma2-ci .
