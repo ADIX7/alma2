@@ -83,7 +83,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** tests cover every provider, invalid/missing values, fallback
     precedence, and side effects without touching real user directories.
 
-- [ ] **S06 — Resolve path expressions**
+- [x] **S06 — Resolve path expressions**
   - **Depends on:** S01, S03.
   - **Scope:** home/Documents tokens, relative and absolute paths, slash handling,
     and any additionally approved token/Windows normalization behavior.
@@ -316,6 +316,14 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Checks: focused `go test ./internal/startup -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips.
 - Decisions: no new behavior policies; config provider selection tests the base directory, not `repository.yml`. No real dotfiles or C# files touched.
 - Next ready step: S06 (path expressions). CLI startup integration must use this resolver and avoid preparation for dry runs.
+
+### 2026-11-17 / S06
+
+- Outcome: complete. Added side-effect-free path expression resolution with injectable special directories, literal home/Documents expansion, Windows-only `%APPDATA%`, relative/absolute paths, and YAML-only backslash rejection.
+- Files changed: `internal/pathresolve/pathresolve.go`, `internal/pathresolve/pathresolve_test.go`, `PLAN.md`.
+- Checks: focused `go test ./internal/pathresolve -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips; Windows `%APPDATA%` behavior was simulated on Linux, not natively run on Windows.
+- Decisions: no new behavior policies; unknown tokens remain literal. No real dotfiles or C# files touched.
+- Next ready step: S07 (repository YAML loader). Callers must flag YAML path fields when resolving them.
 
 ### Session entry template
 
