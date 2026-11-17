@@ -49,6 +49,21 @@ func TestInstallConfigureExplicitHarmlessCommands(t *testing.T) {
 	}
 }
 
+func TestInstallOnePositionUsesWorkdirModule(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("native sh integration requires Linux")
+	}
+	f := testutil.NewFixture(t)
+	f.WriteFile(t, "work/mod/.alma.yml", "platforms: [{platform: default, install: 'printf work > work-marker'}]\n")
+	status, output := runFixtureCLI(t, f, "install", "mod")
+	if status != 0 || !strings.Contains(output, "printf work > work-marker") {
+		t.Fatalf("one-position install: %d %q", status, output)
+	}
+	if _, err := os.Stat(filepath.Join(f.Work, "work-marker")); err != nil {
+		t.Fatalf("wrong shell cwd: %v", err)
+	}
+}
+
 func TestConfiguredCommandMissingAndUnavailable(t *testing.T) {
 	f := commandFixture(t, "platforms: [{platform: default}]\n")
 	f.WriteFile(t, "repository/plain/file", "payload")
@@ -62,6 +77,7 @@ func TestConfiguredCommandMissingAndUnavailable(t *testing.T) {
 		{[]string{"configure", "fixtures", "mod"}, "No configure command", 0},
 		{[]string{"install", "fixtures", "plain"}, "No configuration", 0},
 		{[]string{"install", "fixtures", "unsupported"}, "unavailable", 1},
+		{[]string{"configure", "fixtures", "unsupported"}, "unavailable", 1},
 		{[]string{"install", "missing", "mod"}, "unknown repository", 1},
 		{[]string{"install", "fixtures", "missing"}, "module directory", 1},
 	} {

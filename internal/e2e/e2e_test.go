@@ -68,6 +68,12 @@ func TestYAMLToDryRunLinkHistoryAndRepeat(t *testing.T) {
 	if err := os.Remove(probe); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.Symlink(source, filepath.Join(f.Repository, "mod", "source-alias")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(f.Repository, "mod", "folder"), filepath.Join(f.Repository, "mod", "folder-alias")); err != nil {
+		t.Fatal(err)
+	}
 	binary := buildFixtureCLI(t, f)
 
 	if output := invoke(t, f, binary, "ls"); output != "Repositories\nfixtures\n" {
@@ -89,7 +95,7 @@ func TestYAMLToDryRunLinkHistoryAndRepeat(t *testing.T) {
 			t.Fatalf("missing planned target %s: %q", name, preview)
 		}
 	}
-	for _, name := range []string{"README.md", "scratch/skip", ".alma.yml", ".alma-config.json"} {
+	for _, name := range []string{"README.md", "scratch/skip", ".alma.yml", ".alma-config.json", "source-alias", "folder-alias"} {
 		if strings.Contains(preview, filepath.Join(f.Repository, "mod", filepath.FromSlash(name))) {
 			t.Fatalf("excluded source %s planned: %q", name, preview)
 		}
@@ -109,7 +115,7 @@ func TestYAMLToDryRunLinkHistoryAndRepeat(t *testing.T) {
 			t.Fatalf("missing link %s: %v", name, err)
 		}
 	}
-	for _, name := range []string{"README.md", "scratch/skip", ".alma.yml", ".alma-config.json", "folder/child"} {
+	for _, name := range []string{"README.md", "scratch/skip", ".alma.yml", ".alma-config.json", "folder/child", "source-alias", "folder-alias"} {
 		if _, err := os.Lstat(filepath.Join(f.Target, filepath.FromSlash(name))); !os.IsNotExist(err) {
 			t.Fatalf("unexpected target %s: %v", name, err)
 		}
@@ -141,5 +147,39 @@ func TestYAMLToDryRunLinkHistoryAndRepeat(t *testing.T) {
 	}
 	if record := readHistory(); len(record.Destinations) != 4 {
 		t.Fatalf("repeat history: %+v", record)
+	}
+}
+
+func TestSubprocessQuotedHomeTarget(t *testing.T) {
+	f := testutil.NewFixture(t)
+	fixtureFile(t, f, "repository.yml", "config/alma/repository.yml")
+	f.WriteFile(t, "repository/home-module/.alma.yml", "platforms: [{platform: default, target: '~'}]\n")
+	source := f.WriteFile(t, "repository/home-module/file", "payload")
+	probe := filepath.Join(f.Target, "probe")
+	if err := os.Symlink(source, probe); err != nil {
+		t.Skipf("symlink creation unavailable: %v", err)
+	}
+	if err := os.Remove(probe); err != nil {
+		t.Fatal(err)
+	}
+	binary := buildFixtureCLI(t, f)
+	output := invoke(t, f, binary, "link", "fixtures", "home-module", "-d")
+	if !strings.Contains(output, filepath.Join(f.Home, "file")) {
+		t.Fatalf("home-only target not resolved: %q", output)
+	}
+	if _, err := os.Lstat(filepath.Join(f.Home, "file")); !os.IsNotExist(err) {
+		t.Fatalf("dry run wrote home target: %v", err)
+	}
+	invoke(t, f, binary, "link", "fixtures", "home-module")
+	linked, err := os.Readlink(filepath.Join(f.Home, "file"))
+	if err != nil || linked != source {
+		t.Fatalf("home-only target link: %q, %v", linked, err)
+	}
+	recordFile, err := history.File(filepath.Join(f.DataBase, "alma"), filepath.Join(f.Repository, "home-module"), f.Home)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(recordFile); err != nil {
+		t.Fatalf("home target history missing: %v", err)
 	}
 }

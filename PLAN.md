@@ -258,13 +258,13 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** subprocess tests verify nonzero failures and exact allowed
     fixture effects for representative rejected workflows.
 
-- [ ] **S25c — Audit scenario/policy coverage**
+- [x] **S25c — Audit scenario/policy coverage**
   - **Depends on:** S25b.
   - **Scope:** map every `MIGRATION.md` §7 scenario and §8 approved policy to
     a test; close gaps or record platform-dependent limitations.
   - **Done when:** a reviewable coverage matrix and full suite checks pass.
 
-- [ ] **S25 — Complete end-to-end migration coverage**
+- [x] **S25 — Complete end-to-end migration coverage**
   - **Depends on:** S25a, S25b, S25c.
   - **Scope:** map every `MIGRATION.md` §7 scenario and approved §8 decision to
     tests. Add sanitized, corrected fixture examples representative of
@@ -527,6 +527,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/e2e/failures_test.go`, `PLAN.md`.
 - Checks: focused `go test ./internal/e2e -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. Native symlink preflight explicitly skips if unavailable; fake shell subprocess test runs on Linux only. No real dotfiles or C# files touched.
 - Next ready step: S25c (coverage matrix and remaining gaps).
+
+### 2026-11-17 / S25c and parent S25
+
+- Outcome: complete. Audited all 26 `MIGRATION.md` §7 scenarios and 10 §8 policies in `docs/coverage.md`; linked each to passing named tests. Added subprocess coverage for quoted home-only target and skipped source symlinks, plus unit checks for pre-existing target history exclusion and unavailable `configure`. Fixed a missed one-position install/cwd test. S25a/b/c and the parent S25 are now complete; native Windows verification remains S26.
+- Files changed: `docs/coverage.md`, `internal/e2e/e2e_test.go`, `internal/cli/link_test.go`, `internal/cli/commands_test.go`, `PLAN.md`.
+- Checks: coverage assertions (26/26 scenarios, 10/10 policies, all 43 referenced test names found), focused `go test ./internal/e2e ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. Linux native shell/symlink tests ran; Windows-only behavior remains simulated or untested natively and is explicitly documented. No real dotfiles or C# files touched.
+- Next ready step: S26 (supported-platform checks and CI).
 
 ### Session entry template
 

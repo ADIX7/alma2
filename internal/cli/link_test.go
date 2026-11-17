@@ -145,6 +145,8 @@ func TestLinkRealCollisionAndPartialFailure(t *testing.T) {
 func TestLinkUnconfiguredAndRealWrites(t *testing.T) {
 	f := linkFixture(t)
 	f.WriteFile(t, "repository/plain/README.md", "plain")
+	f.WriteFile(t, "repository/plain/keep", "source")
+	f.WriteFile(t, "target/keep", "pre-existing")
 	f.WriteFile(t, "repository/plain/.alma-config.json", `{}`)
 	status, output := runFixtureCLI(t, f, "link", "fixtures", "plain", "-d")
 	if status != 0 || !strings.Contains(output, filepath.Join(f.Repository, "plain", "README.md")) || strings.Contains(output, filepath.Join(f.Repository, "plain", ".alma-config.json")) {
@@ -175,7 +177,10 @@ func TestLinkUnconfiguredAndRealWrites(t *testing.T) {
 	}
 	record := loadCLIHistory(t, f, "plain")
 	if len(record.Destinations) != 1 || record.Destinations[0] != linked {
-		t.Fatalf("repeat history: %+v", record)
+		t.Fatalf("pre-existing/repeat conflict adopted into history: %+v", record)
+	}
+	if content, err := os.ReadFile(filepath.Join(f.Target, "keep")); err != nil || string(content) != "pre-existing" {
+		t.Fatalf("pre-existing target changed: %q, %v", content, err)
 	}
 }
 
