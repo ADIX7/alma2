@@ -91,6 +91,9 @@ func Run(args []string, stdout io.Writer) int {
 	if inv.Command == "info" {
 		return runInfo(inv, stdout)
 	}
+	if inv.Command == "install" || inv.Command == "configure" {
+		return runConfiguredCommand(inv, stdout)
+	}
 	if inv.Command == "ls" {
 		return runList(inv, stdout)
 	}

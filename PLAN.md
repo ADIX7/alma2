@@ -220,7 +220,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** tests verify shell arguments, effective cwd, output, start
     failure, child failure, and approved multiline/interaction restrictions.
 
-- [ ] **S22 — Wire `install` and `configure`**
+- [x] **S22 — Wire `install` and `configure`**
   - **Depends on:** S11, S21.
   - **Scope:** selected merged commands, missing module/config/command cases,
     command display, execution, and approved multiline validation.
@@ -472,6 +472,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/shell/shell.go`, `internal/shell/shell_test.go`, `PLAN.md`. Inspected read-only C# `ShellService.cs`.
 - Checks: focused `go test ./internal/shell -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. Native `sh` fixture smoke ran on Linux; Windows selection was simulated, native Windows execution remains S26. No real dotfiles or C# files touched.
 - Next ready step: S22 (wire install/configure).
+
+### 2026-11-17 / S22
+
+- Outcome: complete. `install` and `configure` now select only their respective merged YAML command, print it, and run in effective working-directory cwd via S21's supported shell. Missing config/command reports without execution; unavailable modules fail; multiline commands fail before execution; child nonzero status propagates. No implicit link, install/configure chaining, or real-dotfile script execution in tests.
+- Files changed: `internal/cli/commands.go`, `internal/cli/commands_test.go`, `internal/cli/cli.go`, `README.md`, `PLAN.md`.
+- Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. Initial multiline YAML flow-scalar test folded the newline; changed to a literal block scalar and reran checks. Native process smoke ran on Linux with harmless fixture commands; Windows command selection is simulated by S21 tests, native Windows execution remains S26. No real dotfiles or C# files touched.
+- Next ready step: S23 (readme).
 
 ### Session entry template
 
