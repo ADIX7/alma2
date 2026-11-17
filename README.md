@@ -80,6 +80,7 @@ explicit YAML nulls are errors. `.yaml` filename aliases are not supported.
 
 ```text
 alma help
+alma --version                # build version; no configuration needed
 alma ls                       # configured repository names
 alma ls fixtures              # direct-child modules, including unavailable ones
 alma info                     # paths, platform, repository availability

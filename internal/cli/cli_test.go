@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -18,6 +19,8 @@ func TestParse(t *testing.T) {
 		{"unknown", []string{"missing"}, Invocation{}, "Invalid command: missing"},
 		{"help alias", []string{"-h", "ignored"}, Invocation{Command: "help"}, ""},
 		{"long help alias", []string{"--help"}, Invocation{Command: "help"}, ""},
+		{"version argument", []string{"--version"}, Invocation{Command: "version"}, ""},
+		{"version ignores extras", []string{"--version", "ignored"}, Invocation{Command: "version"}, ""},
 		{"module required", []string{"configure", "-x"}, Invocation{}, "No module specified"},
 		{"link help special", []string{"link", "--help"}, Invocation{Command: "link", LinkHelp: true}, ""},
 		{"link short help not special", []string{"link", "-h"}, Invocation{}, "No module specified"},
@@ -60,6 +63,7 @@ func TestRun(t *testing.T) {
 		{"help", []string{"help", "ignored"}, help, 0},
 		{"short help", []string{"-h"}, help, 0},
 		{"long help", []string{"--help"}, help, 0},
+		{"version", []string{"--version"}, fmt.Sprintf("Alma %s\n", buildVersion()), 0},
 		{"no command", nil, "No command was given\n", 1},
 		{"unknown", []string{"HELP"}, "Invalid command: HELP\n", 1},
 		{"missing module", []string{"link", "-d"}, "No module specified\n", 1},

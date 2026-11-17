@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"runtime/debug"
 	"sort"
 
 	"github.com/ADIX7/alma2/internal/config"
@@ -36,11 +35,7 @@ func runInfo(inv Invocation, stdout io.Writer) int {
 		return showModuleInfo(inv, dirs, paths, repositories, stdout)
 	}
 	if inv.Repository == "" {
-		version := "unknown"
-		if build, ok := debug.ReadBuildInfo(); ok && build.Main.Version != "" {
-			version = build.Main.Version
-		}
-		fmt.Fprintf(stdout, "Alma %s\n\nAppData folder: %s\n", version, dirs.AppDataRoot)
+		fmt.Fprintf(stdout, "Alma %s\n\nAppData folder: %s\n", buildVersion(), dirs.AppDataRoot)
 		if dirs.ConfigRoot != "" {
 			fmt.Fprintf(stdout, "Configuration folder: %s\n", dirs.ConfigRoot)
 		} else {

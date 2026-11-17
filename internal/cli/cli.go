@@ -29,6 +29,9 @@ func Parse(args []string) (Invocation, error) {
 	if name == "--help" || name == "-h" {
 		name = "help"
 	}
+	if name == "--version" {
+		return Invocation{Command: "version"}, nil
+	}
 	if !commands[name] {
 		return Invocation{}, fmt.Errorf("Invalid command: %s", args[0])
 	}
@@ -84,6 +87,10 @@ func Run(args []string, stdout io.Writer) int {
 	if err != nil {
 		fmt.Fprintln(stdout, err)
 		return 1
+	}
+	if inv.Command == "version" {
+		fmt.Fprintf(stdout, "Alma %s\n", buildVersion())
+		return 0
 	}
 	if inv.Command == "link" {
 		return runLink(inv, stdout)
