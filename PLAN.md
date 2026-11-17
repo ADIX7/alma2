@@ -333,14 +333,14 @@ project scaffolding and isolated test helpers can proceed independently.
     quoted/space paths, exclusions, read-only preview, links, history, and
     repeat conflicts; local full tests/doc checks pass.
 
-- [ ] **S27b — Verify hosted rehearsal CI**
+- [x] **S27b — Verify hosted rehearsal CI**
   - **Depends on:** S27a.
   - **Scope:** run hosted native Linux/Windows/Docker checks with documented
     rehearsal; record actual results and platform limits.
   - **Done when:** hosted CI passes and progress notes are updated; S27 can then
     be closed without authorizing any real-dotfile rollout.
 
-- [ ] **S27 — Publish usage guide and rehearse migration safely**
+- [x] **S27 — Publish usage guide and rehearse migration safely**
   - **Depends on:** S27a, S27b.
   - **Scope:** populate `README.md` with build/use instructions, valid YAML
     examples, environment precedence, deliberate legacy differences, limitations,
@@ -641,6 +641,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `README.md`, `MIGRATION.md`, `docs/coverage.md`, `scripts/rehearse.sh`, `scripts/ci.sh`, `.github/workflows/ci.yml`, `PLAN.md`.
 - Checks: `sh -n` and two local disposable rehearsal runs, Markdown local-link/fence and coverage-reference assertions, YAML workflow syntax, full `go test ./... -count=1`, `go vet ./...`, Go formatting, local Docker full checks including rehearsal, and `git diff --check` passed. No real dotfiles or C# files touched.
 - Next ready step: S27b; push branch and verify hosted Linux/Windows/Docker checks with rehearsal.
+
+### 2026-11-17 / S27b and parent S27
+
+- Outcome: complete. GitHub Actions [44154244613](https://github.com/ADIX7/alma2/actions/runs/44154244613) passed native Ubuntu tests/vet/build/format and disposable rehearsal, native Windows tests/vet/build (POSIX rehearsal skipped), and Docker Go 1.23 full checks plus disposable rehearsal. README guide, tested YAML examples, environment precedence, deliberate legacy differences, limitations, and fixture-only checklist agree with `MIGRATION.md` and the implementation. S27a/S27b and parent S27 are complete; **real dotfiles were not read or modified for rollout**.
+- Files changed: `README.md`, `PLAN.md` (final hosted results and progress).
+- Checks: hosted jobs passed at `f631d31`; local `sh -n scripts/ci.sh scripts/rehearse.sh`, disposable rehearsal, Markdown local links/fences, full `go test ./... -count=1`, `go vet ./...`, YAML workflow syntax, Go formatting, and `git diff --check` passed. Windows symlink permission skips and POSIX-only rehearsal are explicitly documented. No real-dotfile rollout, destructive unlink, or legacy history import is authorized.
+- Next: migration implementation checklist complete. Any real-dotfile rollout requires new, explicit user authorization and a backup/rollback plan; keep it separate from this migration.
 
 ### Session entry template
 

@@ -150,7 +150,7 @@ docker run --rm alma2-ci
 ```
 
 The native Linux, native Windows, and Docker jobs
-[passed on the verification branch](https://github.com/ADIX7/alma2/actions/runs/44150394663).
+[passed with fixture rehearsal](https://github.com/ADIX7/alma2/actions/runs/44154244613).
 Linux tests include native shell/symlink coverage; Windows includes native
 PowerShell and history checks. Windows symlink tests may skip without creation
 privileges; permission tests may skip as root or where permissions cannot be
