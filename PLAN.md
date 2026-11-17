@@ -228,7 +228,7 @@ project scaffolding and isolated test helpers can proceed independently.
     linking or install/configure chaining occurs, and real dotfile scripts are
     never executed by tests.
 
-- [ ] **S23 — Implement `readme`**
+- [x] **S23 — Implement `readme`**
   - **Depends on:** S11.
   - **Scope:** approved filename behavior, search priority, case handling,
     plain-text printing, and no-config support.
@@ -479,6 +479,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/cli/commands.go`, `internal/cli/commands_test.go`, `internal/cli/cli.go`, `README.md`, `PLAN.md`.
 - Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. Initial multiline YAML flow-scalar test folded the newline; changed to a literal block scalar and reran checks. Native process smoke ran on Linux with harmless fixture commands; Windows command selection is simulated by S21 tests, native Windows execution remains S26. No real dotfiles or C# files touched.
 - Next ready step: S23 (readme).
+
+### 2026-11-17 / S23
+
+- Outcome: complete. `readme` reads only a direct-child module root and prints the first exact-case `README.md`, `README.txt`, or `README`, literally and without requiring YAML config. Unavailable configured modules remain readable; missing modules and unsafe names fail nonzero.
+- Files changed: `internal/cli/readme.go`, `internal/cli/readme_test.go`, `internal/cli/cli.go`, `README.md`, `PLAN.md`.
+- Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host. No real dotfiles or C# files touched.
+- Next ready step: S24 (diagnostics and explicit unsupported unlink).
 
 ### Session entry template
 
