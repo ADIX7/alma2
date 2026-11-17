@@ -38,9 +38,11 @@ A **repository** is a directory containing dotfile modules. A configured
 repository has a name, an optional source directory, and an optional default
 link destination.
 
-A **module** is a directory of files and subdirectories to expose through
-symbolic links. Modules may be nested; CLI module names use `/`, for example
-`shell/fish`.
+A **module** is one direct child directory of a repository, containing files
+and payload subdirectories to expose through symbolic links. Module names are
+single directory names and cannot contain `/`. The repository root is not a
+module, and a module cannot contain another module. This flat layout is an
+approved Go migration constraint; legacy discovery could traverse deeper.
 
 A module configuration can specify:
 
@@ -151,13 +153,12 @@ A module's `target` overrides the repository destination. Resolve it relative
 to the repository destination unless it is absolute or uses the home shortcut.
 Explicit link targets are resolved relative to this final module destination.
 
-**Approved Go boundary rule:** CLI module names may be `.` for the repository
-root or relative `/`-separated nested paths. Reject absolute names and names
-whose `..` components escape the selected repository. Reject a symlinked
-module directory or any symlinked component from the repository root to that
-module, even if its lexical name stays within the repository. This differs
-from the legacy `Path.Combine` behavior, which did not check containment or
-symlinks. Never traverse outside the selected source via a CLI module name.
+**Approved Go boundary rule:** CLI module names must be single direct-child
+directory names: reject `.`, `/`, `\`, absolute names, and traversal such as
+`..`. Reject a symlinked module directory or a symlinked selected repository
+root. This differs from the legacy `Path.Combine` behavior, which did not
+check containment or symlinks. Never traverse outside the selected source via
+a CLI module name.
 
 ## 3. YAML configuration contract
 
@@ -430,16 +431,17 @@ Without arguments, print configured repository names in configuration order.
 With a repository name:
 
 - Report an unknown name or missing `repositoryPath`.
-- Recursively find directories with a resolvable module config.
-- Print module paths relative to the repository, using `/` separators.
-- Continue into nested directories even after finding a module.
+- Find direct child directories with a resolvable module config.
+- Print the direct child directory names; do not discover the repository root
+  or recurse into module payload subdirectories.
 
 There is no explicit sorting or hidden-directory exclusion. The legacy command
 uses `repositoryPath` literally, unlike module commands, so home shortcuts in
 that field do not work consistently. The Go CLI uses the common path resolver
 for `ls` as well, including `~` and paths relative to the effective working
-directory. The legacy CLI prints a repository-root module as an empty name;
-the Go CLI prints `.` instead. An unavailable configured module is still listed.
+directory. The legacy CLI could print a repository-root module as an empty name;
+under the approved flat layout Go does not treat the repository root as a
+module. An unavailable configured child module is still listed.
 Extra arguments are ignored; flags are not parsed.
 
 ### `info`
@@ -463,11 +465,10 @@ and explicit mappings, or reports no configuration. Mapping output uses terminal
 colors for existence indications; it does not verify link ownership/correctness.
 
 Legacy caveats: empty repository results can fail instead of printing an empty
-list; a configured repository-root module can fail during name generation;
-module target display does not consistently apply the repository destination
+list; a configured repository-root module could fail during name generation
+(and is outside the approved flat Go layout); module target display does not consistently apply the repository destination
 base; target coloring checks the source key beneath the module target rather
-than the actual mapped destination. The Go CLI handles empty repositories
-and repository-root modules without errors, resolves displayed targets
+than the actual mapped destination. The Go CLI handles empty repositories without errors, resolves displayed targets
 consistently, and checks each mapping's actual destination for its existence
 indicator. For an unavailable module it reports unavailability. The display
 remains informational, not proof of link ownership/correctness.
@@ -574,8 +575,8 @@ policy decisions in section 8 before becoming acceptance tests.
 | Scenario | Expected behavior |
 | --- | --- |
 | No configured repositories | `ls` prints its repository heading and no names. |
-| Named repository with nested modules | `ls <repo>` discovers configured descendants and uses slash-separated names. |
-| Repository-root or unavailable module | `ls` shows root as `.` and includes unavailable configured modules; `info` reports unavailability, `readme` works, and `link`/`install`/`configure` refuse. |
+| Named repository with direct child modules | `ls <repo>` lists only immediate configured child folders, including hidden ones; root and deeper config files are not modules. |
+| Unavailable module | `ls` includes unavailable configured child modules; `info` reports unavailability, `readme` works, and `link`/`install`/`configure` refuse. |
 | Working-directory override | First valid `ALMA_WORKDIR`/`WORKDIR` controls fallback paths and shell cwd. |
 | Module without a config | `link` discovers its files using working-directory defaults. |
 | Default + Linux + Fedora settings | Merge matching sections from least to most specific; declaration order breaks equal-specificity ties. |
@@ -640,18 +641,17 @@ do not approve unrelated legacy-defect fixes or real-dotfile rollout.
    Linux and `pwsh -c` on Windows in effective working-directory cwd; do not
    expand shell support to other OSes. Propagate a child's nonzero exit status.
    Fix `readme` to search `README.md`, then `README.txt`, then `README`.
-7. **Information fixes (S12, S19–S20, S25):** `ls` prints `.` for a repository-root
-   module. `info` handles empty repositories/root modules, resolves target
+7. **Information fixes (S12, S19–S20, S25):** `ls` lists only direct child
+   modules. `info` handles empty repositories, resolves target
    displays consistently, checks actual mapped destinations for existence,
    and reports unavailable modules. Existence is not link-ownership proof.
 8. **Deferred functionality (S18, S24):** `unlink` remains unsupported with
    no deletion/restoration. Ignore old C# link-history files; use a separate
    new format without import or modification of old files.
-9. **CLI module boundary (S11, S25):** reject absolute or repository-escaping
-   module names and symlinked module directories/components, including a
-   symlinked repository root used as the module root. Nested relative paths and
-   `.` remain valid; source/destination roots explicitly configured for a
-   repository are not otherwise constrained to the working directory.
+9. **CLI module boundary (S11, S25):** only single direct-child module names
+   are valid. Reject `.`, slashes, absolute/traversal names, symlinked module
+   directories, and a symlinked selected repository root. Explicitly configured
+   repository source/destination roots need not be within the working directory.
 10. **Planned destination collisions (S14–S16, S25):** after payload exclusions,
     reject the entire plan when two different effective sources resolve to the
     same target. Reject before creating destinations, app-data, links, or history,

@@ -87,10 +87,10 @@ func ResolveModule(dirs startup.Directories, paths pathresolve.Resolver, reposit
 }
 
 func safeModuleName(name string) bool {
-	if name == "" || strings.Contains(name, `\`) || (len(name) >= 2 && name[1] == ':') {
+	if name == "" || name == "." || strings.ContainsAny(name, `/\`) || (len(name) >= 2 && name[1] == ':') {
 		return false
 	}
-	// IsLocal rejects absolute paths and names that lexically escape via `..`.
+	// Only a single direct-child directory name is valid.
 	return filepath.IsLocal(filepath.FromSlash(name))
 }
 
@@ -102,16 +102,9 @@ func moduleDirectory(root, name string) (string, error) {
 	if err := realDirectory(current); err != nil {
 		return "", fmt.Errorf("source directory %q: %w", current, err)
 	}
-	if name == "." {
-		return current, nil
-	}
-	// Check each effective path component; no symlink is ever followed.
-	cleanName := filepath.Clean(filepath.FromSlash(name))
-	for _, component := range strings.Split(cleanName, string(filepath.Separator)) {
-		current = filepath.Join(current, component)
-		if err := realDirectory(current); err != nil {
-			return "", fmt.Errorf("module directory %q: %w", current, err)
-		}
+	current = filepath.Join(current, name)
+	if err := realDirectory(current); err != nil {
+		return "", fmt.Errorf("module directory %q: %w", current, err)
 	}
 	return current, nil
 }

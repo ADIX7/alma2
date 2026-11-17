@@ -124,8 +124,8 @@ project scaffolding and isolated test helpers can proceed independently.
 
 - [x] **S11 — Resolve repository and module operation context**
   - **Depends on:** S04, S05, S06, S07, S10.
-  - **Scope:** named repositories, working-directory fallbacks, nested module
-    names, final destination roots, unknown names, and approved boundary rules.
+  - **Scope:** named repositories, working-directory fallbacks, single direct-child
+    module names, final destination roots, unknown names, and approved boundary rules.
   - **Done when:** tests cover one/two positional forms, absent path fields,
     relative paths, target overrides, missing directories, and unsafe paths.
 
@@ -133,10 +133,10 @@ project scaffolding and isolated test helpers can proceed independently.
 
 - [x] **S12 — Implement repository/module discovery and `ls`**
   - **Depends on:** S11.
-  - **Scope:** repository names and recursive YAML-configured module discovery,
-    including nested/root modules and approved hidden-directory behavior.
+  - **Scope:** repository names and direct-child YAML-configured module discovery,
+    including hidden child directories but excluding root/deeper folders.
   - **Done when:** CLI tests cover empty repositories, unknown names, missing
-    sources, nested modules, slash-separated output, and JSON-only directories.
+    sources, direct child modules, and JSON-only directories.
 
 - [x] **S13 — Plan automatically discovered links without writing**
   - **Depends on:** S11.
@@ -154,8 +154,16 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** tests cover nested paths, repeated basenames, directory
     mappings, target-root overrides, and approved collision behavior.
 
+- [x] **S14a — Align module layout with approved flat repository model**
+  - **Depends on:** S11, S12, S14.
+  - **Scope:** record direct-child-only module names; correct earlier context and
+    `ls` behavior/tests without changing recursive *payload* planning.
+  - **Done when:** names with `/` or `.` are refused; `ls` only discovers
+    immediate configured children; fixtures confirm root/deeper configs are
+    not modules and the full test suite passes.
+
 - [ ] **S15 — Apply configuration and payload exclusions**
-  - **Depends on:** S14.
+  - **Depends on:** S14, S14a.
   - **Scope:** `.alma.yml`, approved legacy-config exclusions, source subtrees,
     default/explicit README settings, and directory-link exclusion limitations.
   - **Done when:** tests cover configured/unconfigured modules, mixed JSON/YAML
@@ -193,7 +201,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Depends on:** S12.
   - **Scope:** version, directories, platform, repository availability,
     configured module counts, sorting, and install/configure capabilities.
-  - **Done when:** CLI tests cover no config, empty/root/nested modules, missing
+  - **Done when:** CLI tests cover no config, empty/direct-child modules, missing
     source folders, explicit mapping counts, and approved legacy display fixes.
 
 - [ ] **S20 — Implement module `info`**
@@ -225,7 +233,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Scope:** approved filename behavior, search priority, case handling,
     plain-text printing, and no-config support.
   - **Done when:** tests cover each supported filename, priority collisions,
-    missing files/modules, nested module paths, and literal Markdown output.
+    missing files/modules, single-component module names, and literal Markdown output.
 
 - [ ] **S24 — Implement diagnostics and explicit unsupported `unlink`**
   - **Depends on:** S04, S05, S06.
@@ -400,6 +408,21 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `MIGRATION.md`, `internal/config/module.go` (export shared source-path validator), `internal/linkplan/automatic.go`, `internal/linkplan/mapped.go`, `internal/linkplan/mapped_test.go`, `PLAN.md` (including pre-existing uncommitted blocker entry).
 - Checks: focused `go test ./internal/linkplan ./internal/config -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. An initial vet run found unkeyed external-package test literals; fixed them and reran checks. Symlink tests run on Linux, with explicit skips if unavailable. No real dotfiles or C# files touched.
 - Next ready step: S15 (configuration and payload exclusions).
+
+### 2026-11-17 / S15 (blocked: protected config inside mapped directory)
+
+- Outcome: blocked; S15 remains unchecked and no exclusion implementation started. `MIGRATION.md` says always omit `.alma.yml` and `.alma-config.json` from link payloads, but a whole-directory symlink can expose either file nested within it. The same contract says excluding a child cannot remove it from an already planned whole-directory link.
+- Files changed: `PLAN.md` (blocker only). No real dotfiles or C# files touched.
+- Checks: no development tests for blocked S15; documentation consistency and `git diff --check` should be run after this note. S14 focused/full tests and vet passed before its separate commit.
+- Decision needed (superseded by later flat-layout clarification): when an explicitly mapped directory contains a protected config filename anywhere below it, reject that mapping/plan, expand the directory into individual links instead, or permit those files through the whole-directory symlink as an exception to “always exclude”? Ordinary nested `exclude` paths retain the documented whole-directory caveat unless separately revised.
+- Next action: record the approved rule in `MIGRATION.md`, implement S15 with fixture tests, validate destinations after exclusions and before writes, run focused/full checks, then commit if complete.
+
+### 2026-11-17 / S14a (flat module layout correction)
+
+- Outcome: complete. User clarified repository modules are single direct child directories, with no module hierarchy or `/` in names; module payload may still contain nested folders. Corrected previous S11/S12 behavior and planned downstream acceptance checks. The S15 blocker is superseded for valid layouts.
+- Files changed: `MIGRATION.md`, `PLAN.md`, `internal/operation/context.go`, `internal/operation/discovery.go`, related operation/CLI tests.
+- Checks: `go test ./internal/operation ./internal/cli -count=1`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host; symlink tests explicitly skip if creation unavailable.
+- Next action: implement S15, keeping the historical S11/S12 handoff notes as records of prior behavior.
 
 ### Session entry template
 

@@ -50,32 +50,28 @@ func TestResolveRepositoryDefaultsAndNames(t *testing.T) {
 
 func TestResolveModuleTwoFormsAndTargets(t *testing.T) {
 	f, dirs, paths := setup(t)
-	f.WriteFile(t, "work/shell/fish/file", "payload")
-	f.WriteFile(t, "repository/shell/fish/.alma.yml", `platforms:
+	f.WriteFile(t, "work/fish/file", "payload")
+	f.WriteFile(t, "repository/fish/.alma.yml", `platforms:
   - platform: default
     target: 'module-target'
   - platform: linux
     target: '~/.config/fish'
 `)
 	entries := []config.Repository{{Name: "dotfiles", RepositoryPath: str("../repository"), LinkPath: str("../target")}}
-	defaultModule, err := ResolveModule(dirs, paths, entries, "", "shell/fish", "linux-x64")
-	if err != nil || defaultModule.SourceDir != filepath.Join(f.Work, "shell", "fish") || defaultModule.TargetDir != f.Root || !defaultModule.Settings.Available || defaultModule.Settings.ExcludeReadme {
+	defaultModule, err := ResolveModule(dirs, paths, entries, "", "fish", "linux-x64")
+	if err != nil || defaultModule.SourceDir != filepath.Join(f.Work, "fish") || defaultModule.TargetDir != f.Root || !defaultModule.Settings.Available || defaultModule.Settings.ExcludeReadme {
 		t.Fatalf("one-position fallback: %+v, %v", defaultModule, err)
 	}
-	configured, err := ResolveModule(dirs, paths, entries, "dotfiles", "shell/fish", "windows-x64")
-	if err != nil || configured.SourceDir != filepath.Join(f.Repository, "shell", "fish") || configured.TargetDir != filepath.Join(f.Target, "module-target") || !configured.Settings.ExcludeReadme {
+	configured, err := ResolveModule(dirs, paths, entries, "dotfiles", "fish", "windows-x64")
+	if err != nil || configured.SourceDir != filepath.Join(f.Repository, "fish") || configured.TargetDir != filepath.Join(f.Target, "module-target") || !configured.Settings.ExcludeReadme {
 		t.Fatalf("two-position config: %+v, %v", configured, err)
 	}
-	linux, err := ResolveModule(dirs, paths, entries, "dotfiles", "shell/fish", "linux-x64")
+	linux, err := ResolveModule(dirs, paths, entries, "dotfiles", "fish", "linux-x64")
 	if err != nil || linux.TargetDir != filepath.Join(f.Home, ".config", "fish") {
 		t.Fatalf("absolute/home module override: %+v, %v", linux, err)
 	}
 	if _, err := os.Stat(filepath.Join(f.Target, "module-target")); !os.IsNotExist(err) {
 		t.Fatalf("resolution created target: %v", err)
-	}
-	root, err := ResolveModule(dirs, paths, entries, "dotfiles", ".", "linux-x64")
-	if err != nil || root.SourceDir != f.Repository || !root.Settings.Available {
-		t.Fatalf("repository-root module: %+v, %v", root, err)
 	}
 }
 
@@ -113,19 +109,15 @@ func TestResolveModuleErrorsAndUnavailability(t *testing.T) {
 
 func TestModuleBoundaryAndSymlinks(t *testing.T) {
 	f, dirs, paths := setup(t)
-	f.WriteFile(t, "repository/safe/nested/file", "payload")
+	f.WriteFile(t, "repository/safe/file", "payload")
 	entries := []config.Repository{{Name: "dotfiles", RepositoryPath: str("../repository")}}
-	for _, name := range []string{"", "..", "../repository/safe", "safe/../../../target", "/tmp/outside", f.Target, `C:/outside`, `safe\nested`} {
+	for _, name := range []string{"", ".", "..", "../repository/safe", "safe/nested", "safe/../safe", "safe/../../../target", "/tmp/outside", f.Target, `C:/outside`, `safe\nested`} {
 		if _, err := ResolveModule(dirs, paths, entries, "dotfiles", name, "linux-x64"); err == nil || !strings.Contains(err.Error(), "unsafe module name") {
 			t.Fatalf("unsafe module %q accepted: %v", name, err)
 		}
 	}
-	if got, err := ResolveModule(dirs, paths, entries, "dotfiles", "safe/nested", "linux-x64"); err != nil || got.SourceDir != filepath.Join(f.Repository, "safe", "nested") {
-		t.Fatalf("valid nested module: %+v, %v", got, err)
-	}
-	// A non-escaping .. component is allowed after lexical normalization.
-	if got, err := ResolveModule(dirs, paths, entries, "dotfiles", "safe/nested/../nested", "linux-x64"); err != nil || got.SourceDir != filepath.Join(f.Repository, "safe", "nested") {
-		t.Fatalf("non-escaping ..: %+v, %v", got, err)
+	if got, err := ResolveModule(dirs, paths, entries, "dotfiles", "safe", "linux-x64"); err != nil || got.SourceDir != filepath.Join(f.Repository, "safe") {
+		t.Fatalf("direct module: %+v, %v", got, err)
 	}
 	if err := os.Symlink(f.Target, filepath.Join(f.Repository, "external")); err != nil {
 		t.Skipf("symlink creation unavailable: %v", err)
@@ -133,7 +125,7 @@ func TestModuleBoundaryAndSymlinks(t *testing.T) {
 	if err := os.Symlink(filepath.Join(f.Repository, "safe"), filepath.Join(f.Repository, "alias")); err != nil {
 		t.Skipf("symlink creation unavailable: %v", err)
 	}
-	for _, name := range []string{"external", "alias/nested"} {
+	for _, name := range []string{"external", "alias"} {
 		if _, err := ResolveModule(dirs, paths, entries, "dotfiles", name, "linux-x64"); err == nil || !strings.Contains(err.Error(), "symlinked directory") {
 			t.Fatalf("symlink module %q: %v", name, err)
 		}
@@ -142,7 +134,7 @@ func TestModuleBoundaryAndSymlinks(t *testing.T) {
 		t.Skipf("symlink creation unavailable: %v", err)
 	}
 	entries[0].RepositoryPath = str("../repo-alias")
-	if _, err := ResolveModule(dirs, paths, entries, "dotfiles", ".", "linux-x64"); err == nil || !strings.Contains(err.Error(), "symlinked directory") {
-		t.Fatalf("symlinked repository root module: %v", err)
+	if _, err := ResolveModule(dirs, paths, entries, "dotfiles", "safe", "linux-x64"); err == nil || !strings.Contains(err.Error(), "symlinked directory") {
+		t.Fatalf("symlinked repository root: %v", err)
 	}
 }

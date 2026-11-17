@@ -44,7 +44,7 @@ func TestListRepositoriesAndModules(t *testing.T) {
 	if status, output := runListFixture(t, f, "ls"); status != 0 || output != "Repositories\ndotfiles\nother\n" {
 		t.Fatalf("repository order: %d %q", status, output)
 	}
-	if status, output := runListFixture(t, f, "ls", "dotfiles", "ignored"); status != 0 || output != "Modules in repository 'dotfiles'\n.\n.hidden\neditor\neditor/nested\n" {
+	if status, output := runListFixture(t, f, "ls", "dotfiles", "ignored"); status != 0 || output != "Modules in repository 'dotfiles'\n.hidden\neditor\n" {
 		t.Fatalf("module discovery: %d %q", status, output)
 	}
 	if status, output := runListFixture(t, f, "ls", "other"); status != 0 || output != "Modules in repository 'other'\n" {
@@ -58,7 +58,8 @@ func TestListRepositoriesAndModules(t *testing.T) {
 func TestListErrorsAndPathResolution(t *testing.T) {
 	f := testutil.NewFixture(t)
 	f.WriteFile(t, "config/alma/repository.yml", "repositories:\n  - name: without-path\n  - name: tilde\n    repositoryPath: '~/modules'\n  - name: relative\n    repositoryPath: '../repository'\n  - name: absent\n    repositoryPath: '../missing'\n")
-	f.WriteFile(t, "home/modules/nested/.alma.yml", "platforms: []\n")
+	f.WriteFile(t, "home/modules/.alma.yml", "platforms: []\n")
+	f.WriteFile(t, "home/modules/fish/.alma.yml", "platforms: []\n")
 	f.WriteFile(t, "repository/invalid/.alma.yml", "platforms: null\n")
 	for _, tc := range []struct{ name, message string }{
 		{"WITHOUT-PATH", "unknown repository"},
@@ -71,7 +72,7 @@ func TestListErrorsAndPathResolution(t *testing.T) {
 			t.Fatalf("ls %q: %d %q; want %q", tc.name, status, output, tc.message)
 		}
 	}
-	if status, output := runListFixture(t, f, "ls", "tilde"); status != 0 || output != "Modules in repository 'tilde'\nnested\n" {
+	if status, output := runListFixture(t, f, "ls", "tilde"); status != 0 || output != "Modules in repository 'tilde'\nfish\n" {
 		t.Fatalf("resolved tilde path: %d %q", status, output)
 	}
 	f.WriteFile(t, "config/alma/repository.yml", "repositories: null\n")
