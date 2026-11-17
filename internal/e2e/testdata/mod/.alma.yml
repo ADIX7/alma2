@@ -1,0 +1,10 @@
+platforms:
+  - platform: default
+    links:
+      - source: editor/config
+        target: renamed/config
+      - source: folder
+        target: mapped-folder
+    exclude:
+      - scratch
+    excludeReadme: true

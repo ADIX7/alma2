@@ -244,8 +244,28 @@ project scaffolding and isolated test helpers can proceed independently.
 
 ### Verification and migration documentation
 
-- [ ] **S25 — Complete end-to-end migration coverage**
+- [x] **S25a — Subprocess success-path fixture and lifecycle**
   - **Depends on:** S18, S20, S22, S23, S24.
+  - **Scope:** sanitized, corrected YAML examples and a disposable binary test for
+    config discovery, dry-run, real links, history, and repeat-run conflicts.
+  - **Done when:** a subprocess test proves successful end-to-end behavior and
+    read-only dry-run effects without invoking real dotfile scripts.
+
+- [ ] **S25b — Subprocess validation and failure-path matrix**
+  - **Depends on:** S25a.
+  - **Scope:** malformed/JSON-only configuration, unavailable modules, unsafe
+    names, final-plan collisions, partial failure, and command restrictions.
+  - **Done when:** subprocess tests verify nonzero failures and exact allowed
+    fixture effects for representative rejected workflows.
+
+- [ ] **S25c — Audit scenario/policy coverage**
+  - **Depends on:** S25b.
+  - **Scope:** map every `MIGRATION.md` §7 scenario and §8 approved policy to
+    a test; close gaps or record platform-dependent limitations.
+  - **Done when:** a reviewable coverage matrix and full suite checks pass.
+
+- [ ] **S25 — Complete end-to-end migration coverage**
+  - **Depends on:** S25a, S25b, S25c.
   - **Scope:** map every `MIGRATION.md` §7 scenario and approved §8 decision to
     tests. Add sanitized, corrected fixture examples representative of
     `~/dotconfig` modules; leave original WIP files unchanged.
@@ -493,6 +513,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/cli/diag.go`, `internal/cli/diag_test.go`, `internal/cli/cli.go`, `internal/cli/cli_test.go`, `internal/cli/list_test.go` (fixture APPDATA isolation), `README.md`, `PLAN.md`. Inspected the C# diagnostic sources read-only.
 - Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host. No real dotfiles or C# files touched.
 - Next ready step: S25 (end-to-end coverage and corrected sanitized fixtures).
+
+### 2026-11-17 / S25a
+
+- Outcome: complete. Added sanitized YAML-only `repository.yml` and `.alma.yml` fixture examples plus a built-CLI subprocess test for repository/module listing, info mapping count, literal README, read-only dry run, real file/directory mappings, exclusions, Go history, and repeat-run conflicts. The CLI subprocess inherits only fixture-valued environment variables; no real dotfile shell commands are invoked. S25 parent remains unchecked pending S25b/S25c.
+- Files changed: `internal/e2e/testdata/repository.yml`, `internal/e2e/testdata/mod/.alma.yml`, `internal/e2e/e2e_test.go`, `PLAN.md` (split S25 into session-sized S25a/b/c).
+- Checks: focused `go test ./internal/e2e -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. Symlink preflight explicitly skips if unavailable. No real dotfiles or C# files touched.
+- Next ready step: S25b (subprocess failure-path matrix).
 
 ### Session entry template
 

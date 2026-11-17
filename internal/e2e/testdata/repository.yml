@@ -1,0 +1,4 @@
+repositories:
+  - name: fixtures
+    repositoryPath: "../repository"
+    linkPath: "../target"
