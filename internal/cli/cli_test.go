@@ -64,7 +64,6 @@ func TestRun(t *testing.T) {
 		{"unknown", []string{"HELP"}, "Invalid command: HELP\n", 1},
 		{"missing module", []string{"link", "-d"}, "No module specified\n", 1},
 		{"link help", []string{"link", "--help"}, "Usage: alma link [repository] <module> [-d|--dry-run]\n", 0},
-		{"unimplemented real link", []string{"link", "mod"}, "Command not implemented: link creation\n", 1},
 		{"unimplemented handler", []string{"info"}, "Command not implemented: info\n", 1},
 		{"unimplemented unlink", []string{"unlink"}, "Command not implemented: unlink\n", 1},
 	} {

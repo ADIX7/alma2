@@ -14,7 +14,13 @@ import (
 func runFixtureCLI(t *testing.T, f *testutil.Fixture, args ...string) (int, string) {
 	t.Helper()
 	t.Setenv("ALMA_CONFIG", f.ConfigBase)
+	t.Setenv("XDG_CONFIG_HOME", f.ConfigBase)
 	t.Setenv("ALMA_WORKDIR", f.Work)
+	t.Setenv("WORKDIR", f.Work)
+	t.Setenv("ALMA_APP_DATA", f.DataBase)
+	t.Setenv("ALMA_APP_DATA_FALLBACK", f.DataBase)
+	t.Setenv("XDG_DATA_HOME", f.DataBase)
+	t.Setenv("LOCALAPPDATA", f.DataBase)
 	t.Setenv("HOME", f.Home)
 	t.Setenv("USERPROFILE", f.Home)
 	var output bytes.Buffer

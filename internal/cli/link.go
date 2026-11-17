@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/ADIX7/alma2/internal/config"
+	"github.com/ADIX7/alma2/internal/linkapply"
 	"github.com/ADIX7/alma2/internal/linkplan"
 	"github.com/ADIX7/alma2/internal/operation"
 	"github.com/ADIX7/alma2/internal/pathresolve"
@@ -17,10 +18,6 @@ func runLink(inv Invocation, stdout io.Writer) int {
 	if inv.LinkHelp {
 		fmt.Fprintln(stdout, "Usage: alma link [repository] <module> [-d|--dry-run]")
 		return 0
-	}
-	if !inv.DryRun {
-		fmt.Fprintln(stdout, "Command not implemented: link creation")
-		return 1
 	}
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -46,6 +43,17 @@ func runLink(inv Invocation, stdout io.Writer) int {
 	if err != nil {
 		fmt.Fprintln(stdout, err)
 		return 1
+	}
+	if !inv.DryRun {
+		if err := dirs.Prepare(false); err != nil {
+			fmt.Fprintln(stdout, err)
+			return 1
+		}
+		_, err := linkapply.Apply(candidates, stdout)
+		if err != nil {
+			return 1
+		}
+		return 0
 	}
 	fmt.Fprintln(stdout, "Dry run. No links will be created. The following links would be created:")
 	for _, candidate := range candidates {

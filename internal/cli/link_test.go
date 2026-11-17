@@ -109,7 +109,34 @@ func TestLinkDryRunWorkingDirectoryAndUnavailableModule(t *testing.T) {
 	}
 }
 
-func TestLinkUnconfiguredAndNoRealWrites(t *testing.T) {
+func TestLinkRealCollisionAndPartialFailure(t *testing.T) {
+	f := linkFixture(t)
+	f.WriteFile(t, "repository/mod/.alma.yml", "platforms: [{platform: default, links: [{source: a, target: same}, {source: b, target: same}]}]\n")
+	f.WriteFile(t, "repository/mod/a", "a")
+	f.WriteFile(t, "repository/mod/b", "b")
+	status, output := runFixtureCLI(t, f, "link", "fixtures", "mod")
+	if status == 0 || !strings.Contains(output, "duplicate destination") {
+		t.Fatalf("collision: %d %q", status, output)
+	}
+	if _, err := os.Lstat(filepath.Join(f.DataBase, "alma")); !os.IsNotExist(err) {
+		t.Fatalf("collision created app data: %v", err)
+	}
+	if _, err := os.Lstat(filepath.Join(f.Target, "same")); !os.IsNotExist(err) {
+		t.Fatalf("collision created target: %v", err)
+	}
+	f.WriteFile(t, "repository/mod/.alma.yml", "platforms: [{platform: default, links: [{source: a, target: blocker/failed}, {source: b, target: good}]}]\n")
+	f.WriteFile(t, "target/blocker", "file")
+	status, output = runFixtureCLI(t, f, "link", "fixtures", "mod")
+	if status == 0 || !strings.Contains(output, "create link") || !strings.Contains(output, "Linking:") {
+		t.Fatalf("partial run: %d %q", status, output)
+	}
+	info, err := os.Lstat(filepath.Join(f.Target, "good"))
+	if err != nil || info.Mode()&os.ModeSymlink == 0 {
+		t.Fatalf("partial success not retained: %v", err)
+	}
+}
+
+func TestLinkUnconfiguredAndRealWrites(t *testing.T) {
 	f := linkFixture(t)
 	f.WriteFile(t, "repository/plain/README.md", "plain")
 	f.WriteFile(t, "repository/plain/.alma-config.json", `{}`)
@@ -117,11 +144,27 @@ func TestLinkUnconfiguredAndNoRealWrites(t *testing.T) {
 	if status != 0 || !strings.Contains(output, filepath.Join(f.Repository, "plain", "README.md")) || strings.Contains(output, filepath.Join(f.Repository, "plain", ".alma-config.json")) {
 		t.Fatalf("unconfigured: %d %q", status, output)
 	}
-	status, output = runFixtureCLI(t, f, "link", "fixtures", "plain")
-	if status == 0 || !strings.Contains(output, "not implemented") {
-		t.Fatalf("real link pretended success: %d %q", status, output)
+	probe := filepath.Join(f.Target, "probe")
+	if err := os.Symlink(filepath.Join(f.Repository, "plain", "README.md"), probe); err != nil {
+		t.Skipf("symlink creation unavailable: %v", err)
 	}
-	if _, err := os.Lstat(filepath.Join(f.DataBase, "alma")); !os.IsNotExist(err) {
-		t.Fatalf("real placeholder wrote app data: %v", err)
+	if err := os.Remove(probe); err != nil {
+		t.Fatal(err)
+	}
+	status, output = runFixtureCLI(t, f, "link", "fixtures", "plain")
+	if status != 0 || !strings.Contains(output, "Linking:") {
+		t.Fatalf("real link failed: %d %q", status, output)
+	}
+	linked := filepath.Join(f.Target, "README.md")
+	info, err := os.Lstat(linked)
+	if err != nil || info.Mode()&os.ModeSymlink == 0 {
+		t.Fatalf("real link missing: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(f.DataBase, "alma")); err != nil {
+		t.Fatalf("app data absent: %v", err)
+	}
+	status, output = runFixtureCLI(t, f, "link", "fixtures", "plain")
+	if status != 0 || !strings.Contains(output, "Item already exists: "+linked) {
+		t.Fatalf("repeat conflict: %d %q", status, output)
 	}
 }

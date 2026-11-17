@@ -177,7 +177,7 @@ project scaffolding and isolated test helpers can proceed independently.
     ordinary/broken symlinks, missing sources, flags, and exact allowed effects.
     No symlink or history write occurs in a dry run.
 
-- [ ] **S17 — Create links and handle filesystem failures**
+- [x] **S17 — Create links and handle filesystem failures**
   - **Depends on:** S16.
   - **Scope:** real file/directory symlinks, approved parent-directory creation,
     non-overwrite behavior, partial failures, and actionable platform errors.
@@ -437,6 +437,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/cli/link.go`, `internal/cli/link_test.go`, `internal/cli/cli.go`, `internal/cli/cli_test.go`, `internal/cli/list_test.go` (renamed shared fixture helper), `README.md`, `PLAN.md`.
 - Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, `git diff --check`, and a temporary CLI smoke test verifying no target/app-data write passed. Symlink tests run on Linux and explicitly skip if creation unavailable. No real dotfiles or C# files touched.
 - Next ready step: S17 (real symlink creation and failure handling).
+
+### 2026-11-17 / S17
+
+- Outcome: complete. Real `link` now plans/validates before startup/app-data writes, creates parent directories and file/directory symlinks, preserves existing destinations (including broken symlinks), skips source symlinks/changed sources, continues after per-item failures, and exits nonzero on any failure. The apply layer returns only newly created links for S18 history; no history is persisted yet.
+- Files changed: `internal/linkapply/apply.go`, `internal/linkapply/apply_test.go`, `internal/cli/link.go`, `internal/cli/link_test.go`, `internal/cli/cli_test.go`, `internal/cli/list_test.go` (fully fixture-scoped environment for real writes), `README.md`, `PLAN.md`.
+- Checks: focused `go test ./internal/linkapply ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, `git diff --check`, and temporary-binary real-link/repeat-conflict smoke passed. First CLI run exposed test fixture app-data environment incompleteness; fixed it before full checks. POSIX permission test passed on this host; Windows symlink permission behavior remains untested natively. No real dotfiles or C# files touched.
+- Next ready step: S18 (new-format link history and integration).
 
 ### Session entry template
 
