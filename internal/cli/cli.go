@@ -88,6 +88,9 @@ func Run(args []string, stdout io.Writer) int {
 	if inv.Command == "link" {
 		return runLink(inv, stdout)
 	}
+	if inv.Command == "info" {
+		return runInfo(inv, stdout)
+	}
 	if inv.Command == "ls" {
 		return runList(inv, stdout)
 	}

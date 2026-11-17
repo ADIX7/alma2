@@ -197,7 +197,7 @@ project scaffolding and isolated test helpers can proceed independently.
 
 ### Information and utility commands
 
-- [ ] **S19 — Implement general and repository `info`**
+- [x] **S19 — Implement general and repository `info`**
   - **Depends on:** S12.
   - **Scope:** version, directories, platform, repository availability,
     configured module counts, sorting, and install/configure capabilities.
@@ -451,6 +451,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/history/history.go`, `internal/history/history_test.go`, `internal/cli/link.go`, `internal/cli/link_test.go`, `MIGRATION.md`, `README.md`, `PLAN.md`.
 - Checks: focused `go test ./internal/history ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. Native Windows atomic replacement remains unverified until S26. No real dotfiles or C# files touched.
 - Next ready step: S19 (general/repository info), with S21/S23/S24 independently ready.
+
+### 2026-11-17 / S19
+
+- Outcome: complete. Added general `info` (Go build version, selected directories, platform, ordered repository availability) and named repository `info` (sorted direct-child configured modules, effective explicit mapping counts, install/configure capability, unavailable marker). Empty repositories and missing sources are handled without panics; module-level `info` remains an explicit nonzero S20 placeholder.
+- Files changed: `internal/cli/info.go`, `internal/cli/info_test.go`, `internal/cli/cli.go`, `internal/cli/cli_test.go`, `README.md`, `PLAN.md`. Inspected the C# `InfoCommand` and `VersionService` read-only.
+- Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host. No real dotfiles or C# files touched.
+- Next ready step: S20 (module info).
 
 ### Session entry template
 

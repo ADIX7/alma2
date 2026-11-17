@@ -1,8 +1,8 @@
 # Alma (Go migration)
 
 The Go CLI is being built in steps tracked by [PLAN.md](PLAN.md). It currently
-supports `help`, `ls`, `link`, and a read-only `link -d`/`link --dry-run`
-preview. `ls` reads `repository.yml` and lists direct child modules with
+supports `help`, `ls`, `link`, general/repository `info`, and a read-only
+`link -d`/`link --dry-run` preview. `ls` reads `repository.yml` and lists direct child modules with
 `.alma.yml`. Real linking creates symlinks in selected destinations and stores Go-only YAML
 history under `<app-data>/history-v1/`; legacy history files are not read or
 modified. Other recognized commands still report that they are not implemented
