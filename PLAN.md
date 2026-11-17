@@ -107,7 +107,7 @@ project scaffolding and isolated test helpers can proceed independently.
     quoted home paths versus YAML null, `%` paths, script strings, and JSON-only
     modules. Parsing does not execute scripts or create links.
 
-- [ ] **S09 — Detect compatible platform identifiers**
+- [x] **S09 — Detect compatible platform identifiers**
   - **Depends on:** S01, S03.
   - **Scope:** OS identifiers, legacy-compatible architecture names, Linux
     distribution detection, and approved handling of quoted/missing `ID` values.
@@ -340,6 +340,14 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Checks: focused `go test ./internal/config -count=1`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips. Initial run exposed a changed repository root-type error message after sharing the decoder; test expectation was updated without changing rejection behavior, then all tests passed.
 - Decisions: no new behavior policies; multiline shell strings parse but execution remains restricted to S21/S22. No real dotfiles or C# files touched.
 - Next ready step: S09 (platform identifiers).
+
+### 2026-11-17 / S09
+
+- Outcome: complete. Added OS/distro/process-architecture identifiers with fixture-driven `/etc/os-release` parsing, quoted/unquoted IDs, missing/unreadable fallback, and Go-to-legacy architecture names.
+- Files changed: `internal/platform/platform.go`, `internal/platform/platform_test.go`, `PLAN.md`. Inspected the C# `OsInformation.cs` read-only to preserve case-insensitive `ID=` lookup.
+- Checks: focused `go test ./internal/platform -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips; non-Linux OS identifiers are fixture-simulated, not natively run.
+- Decisions: no new behavior policies; approved quoted Linux ID normalization retained. No real dotfiles or C# files changed.
+- Next ready step: S10 (platform selection and merging).
 
 ### Session entry template
 
