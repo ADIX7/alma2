@@ -64,7 +64,7 @@ func TestRun(t *testing.T) {
 		{"unknown", []string{"HELP"}, "Invalid command: HELP\n", 1},
 		{"missing module", []string{"link", "-d"}, "No module specified\n", 1},
 		{"link help", []string{"link", "--help"}, "Usage: alma link [repository] <module> [-d|--dry-run]\n", 0},
-		{"unimplemented unlink", []string{"unlink"}, "Command not implemented: unlink\n", 1},
+		{"unsupported unlink", []string{"unlink"}, "unlink is unsupported; no files were removed\n", 1},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			var output bytes.Buffer

@@ -235,7 +235,7 @@ project scaffolding and isolated test helpers can proceed independently.
   - **Done when:** tests cover each supported filename, priority collisions,
     missing files/modules, single-component module names, and literal Markdown output.
 
-- [ ] **S24 — Implement diagnostics and explicit unsupported `unlink`**
+- [x] **S24 — Implement diagnostics and explicit unsupported `unlink`**
   - **Depends on:** S04, S05, S06.
   - **Scope:** diagnostic help/list/provider values and special-path values;
     recognize `unlink` but report unsupported behavior using approved errors.
@@ -486,6 +486,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/cli/readme.go`, `internal/cli/readme_test.go`, `internal/cli/cli.go`, `README.md`, `PLAN.md`.
 - Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host. No real dotfiles or C# files touched.
 - Next ready step: S24 (diagnostics and explicit unsupported unlink).
+
+### 2026-11-17 / S24
+
+- Outcome: complete. Added `diag --help`, sorted helper list, config/app-data provider values with `<null>` handling, special path values including Windows-only `%APPDATA%`, and nonzero missing/unknown helper errors. `unlink` now explicitly reports unsupported and never removes anything.
+- Files changed: `internal/cli/diag.go`, `internal/cli/diag_test.go`, `internal/cli/cli.go`, `internal/cli/cli_test.go`, `internal/cli/list_test.go` (fixture APPDATA isolation), `README.md`, `PLAN.md`. Inspected the C# diagnostic sources read-only.
+- Checks: focused `go test ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. No skips on this Linux host. No real dotfiles or C# files touched.
+- Next ready step: S25 (end-to-end coverage and corrected sanitized fixtures).
 
 ### Session entry template
 

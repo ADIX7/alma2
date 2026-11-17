@@ -6,8 +6,9 @@ views, and a read-only `link -d`/`link --dry-run` preview. `ls` reads `repositor
 `.alma.yml`. Real linking creates symlinks in selected destinations and stores Go-only YAML
 history under `<app-data>/history-v1/`; legacy history files are not read or
 modified. `install` and `configure` execute explicitly selected, trusted
-single-line shell commands—inspect YAML before running either. Other recognized
-commands still report that they are not implemented and exit nonzero.
+single-line shell commands—inspect YAML before running either. `diag` reports
+providers and special paths. `unlink` is explicitly unsupported and never
+deletes items.
 
 Module path: `github.com/ADIX7/alma2`. Prerequisite: Go 1.23 or newer.
 Configuration parsing uses the pinned `gopkg.in/yaml.v3` dependency (see

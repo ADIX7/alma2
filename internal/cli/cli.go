@@ -97,6 +97,13 @@ func Run(args []string, stdout io.Writer) int {
 	if inv.Command == "readme" {
 		return runReadme(inv, stdout)
 	}
+	if inv.Command == "diag" {
+		return runDiag(inv, stdout)
+	}
+	if inv.Command == "unlink" {
+		fmt.Fprintln(stdout, "unlink is unsupported; no files were removed")
+		return 1
+	}
 	if inv.Command == "ls" {
 		return runList(inv, stdout)
 	}

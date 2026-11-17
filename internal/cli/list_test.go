@@ -21,6 +21,7 @@ func runFixtureCLI(t *testing.T, f *testutil.Fixture, args ...string) (int, stri
 	t.Setenv("ALMA_APP_DATA_FALLBACK", f.DataBase)
 	t.Setenv("XDG_DATA_HOME", f.DataBase)
 	t.Setenv("LOCALAPPDATA", f.DataBase)
+	t.Setenv("APPDATA", f.DataBase)
 	t.Setenv("HOME", f.Home)
 	t.Setenv("USERPROFILE", f.Home)
 	var output bytes.Buffer
