@@ -186,7 +186,7 @@ project scaffolding and isolated test helpers can proceed independently.
     preservation of existing items, permissions/failure paths, and approved
     stop/continue semantics. Permission-dependent skips are explicit.
 
-- [ ] **S18 — Persist and integrate successful link history**
+- [x] **S18 — Persist and integrate successful link history**
   - **Depends on:** S17.
   - **Scope:** define the new history format; source/destination pair identity,
     deduplication, prior records, partial successes, and `link` integration.
@@ -444,6 +444,13 @@ history as dated entries; replace stale next-action guidance explicitly.
 - Files changed: `internal/linkapply/apply.go`, `internal/linkapply/apply_test.go`, `internal/cli/link.go`, `internal/cli/link_test.go`, `internal/cli/cli_test.go`, `internal/cli/list_test.go` (fully fixture-scoped environment for real writes), `README.md`, `PLAN.md`.
 - Checks: focused `go test ./internal/linkapply ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, `git diff --check`, and temporary-binary real-link/repeat-conflict smoke passed. First CLI run exposed test fixture app-data environment incompleteness; fixed it before full checks. POSIX permission test passed on this host; Windows symlink permission behavior remains untested natively. No real dotfiles or C# files touched.
 - Next ready step: S18 (new-format link history and integration).
+
+### 2026-11-17 / S18
+
+- Outcome: complete. Added versioned Go-only per-pair YAML records in `history-v1` named by SHA-256 of absolute source/NUL/destination; retains prior destinations, deduplicates new successes, records zero-link real runs, and writes via a temporary file. Real `link` persists successful creations even after partial link failures; history errors return nonzero without rollback. Old C# root-level history files remain untouched. Dry runs never write history.
+- Files changed: `internal/history/history.go`, `internal/history/history_test.go`, `internal/cli/link.go`, `internal/cli/link_test.go`, `MIGRATION.md`, `README.md`, `PLAN.md`.
+- Checks: focused `go test ./internal/history ./internal/cli -count=1 -v`, full `go test ./... -count=1`, `go vet ./...`, `gofmt`, and `git diff --check` passed. Native Windows atomic replacement remains unverified until S26. No real dotfiles or C# files touched.
+- Next ready step: S19 (general/repository info), with S21/S23/S24 independently ready.
 
 ### Session entry template
 

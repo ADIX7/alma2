@@ -563,8 +563,12 @@ associated with the absolute module-source/final-destination pair.
 - No existing command consumes this history to remove links.
 
 The Go CLI uses a separate new history format and ignores old C# history files:
-no import, read, overwrite, or deletion of those files. Define the new format
-in S18. The legacy on-disk encoding is not part of this migration.
+no import, read, overwrite, or deletion of those files. Records live beneath
+`<app-data>/history-v1/<sha256(abs-source + NUL + abs-target)>.yml` as YAML
+with `version: 1`, `source`, `target`, and ordered `destinations` fields. Writes
+replace the Go record via a temporary file in that directory. The old root-level
+`moduleHashes.txt` and legacy hash `.txt` files remain untouched. A history
+write failure returns nonzero without rolling back successfully created links.
 
 ## 7. Functional validation scenarios
 

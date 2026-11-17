@@ -7,7 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ADIX7/alma2/internal/history"
 	"github.com/ADIX7/alma2/internal/testutil"
+	"gopkg.in/yaml.v3"
 )
 
 func linkFixture(t *testing.T) *testutil.Fixture {
@@ -134,6 +136,10 @@ func TestLinkRealCollisionAndPartialFailure(t *testing.T) {
 	if err != nil || info.Mode()&os.ModeSymlink == 0 {
 		t.Fatalf("partial success not retained: %v", err)
 	}
+	record := loadCLIHistory(t, f, "mod")
+	if len(record.Destinations) != 1 || record.Destinations[0] != filepath.Join(f.Target, "good") {
+		t.Fatalf("partial history: %+v", record)
+	}
 }
 
 func TestLinkUnconfiguredAndRealWrites(t *testing.T) {
@@ -167,4 +173,56 @@ func TestLinkUnconfiguredAndRealWrites(t *testing.T) {
 	if status != 0 || !strings.Contains(output, "Item already exists: "+linked) {
 		t.Fatalf("repeat conflict: %d %q", status, output)
 	}
+	record := loadCLIHistory(t, f, "plain")
+	if len(record.Destinations) != 1 || record.Destinations[0] != linked {
+		t.Fatalf("repeat history: %+v", record)
+	}
+}
+
+func TestLinkEmptyHistoryDryRunAndPersistenceFailure(t *testing.T) {
+	f := linkFixture(t)
+	f.WriteFile(t, "repository/empty/.alma.yml", "platforms: [{platform: default}]\n")
+	status, output := runFixtureCLI(t, f, "link", "fixtures", "empty", "-d")
+	if status != 0 || !strings.Contains(output, "Dry run") {
+		t.Fatalf("empty dry run: %d %q", status, output)
+	}
+	if _, err := os.Lstat(filepath.Join(f.DataBase, "alma")); !os.IsNotExist(err) {
+		t.Fatalf("dry run wrote history: %v", err)
+	}
+	status, output = runFixtureCLI(t, f, "link", "fixtures", "empty")
+	if status != 0 {
+		t.Fatalf("empty real run: %d %q", status, output)
+	}
+	if got := loadCLIHistory(t, f, "empty"); len(got.Destinations) != 0 {
+		t.Fatalf("empty history: %+v", got)
+	}
+
+	blocked := linkFixture(t)
+	blocked.WriteFile(t, "repository/failure/file", "payload")
+	blocked.WriteFile(t, "data/alma/history-v1", "not a directory")
+	status, output = runFixtureCLI(t, blocked, "link", "fixtures", "failure")
+	if status == 0 || !strings.Contains(output, "save link history") {
+		t.Fatalf("persistence failure: %d %q", status, output)
+	}
+	info, err := os.Lstat(filepath.Join(blocked.Target, "file"))
+	if err != nil || info.Mode()&os.ModeSymlink == 0 {
+		t.Fatalf("link rolled back after history failure: %v", err)
+	}
+}
+
+func loadCLIHistory(t *testing.T, f *testutil.Fixture, moduleName string) history.Record {
+	t.Helper()
+	recordFile, err := history.File(filepath.Join(f.DataBase, "alma"), filepath.Join(f.Repository, moduleName), f.Target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(recordFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var record history.Record
+	if err := yaml.Unmarshal(data, &record); err != nil {
+		t.Fatal(err)
+	}
+	return record
 }

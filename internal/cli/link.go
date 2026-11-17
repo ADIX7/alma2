@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/ADIX7/alma2/internal/config"
+	"github.com/ADIX7/alma2/internal/history"
 	"github.com/ADIX7/alma2/internal/linkapply"
 	"github.com/ADIX7/alma2/internal/linkplan"
 	"github.com/ADIX7/alma2/internal/operation"
@@ -49,8 +50,12 @@ func runLink(inv Invocation, stdout io.Writer) int {
 			fmt.Fprintln(stdout, err)
 			return 1
 		}
-		_, err := linkapply.Apply(candidates, stdout)
-		if err != nil {
+		created, applyErr := linkapply.Apply(candidates, stdout)
+		saveErr := history.Save(dirs.AppDataRoot, module.SourceDir, module.TargetDir, created)
+		if saveErr != nil {
+			fmt.Fprintf(stdout, "save link history: %v\n", saveErr)
+		}
+		if applyErr != nil || saveErr != nil {
 			return 1
 		}
 		return 0
