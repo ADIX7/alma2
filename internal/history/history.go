@@ -28,12 +28,20 @@ func File(appDataRoot, source, target string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	target, err = filepath.Abs(target)
+	target, err = absoluteTarget(target)
 	if err != nil {
 		return "", err
 	}
 	sum := sha256.Sum256([]byte(source + "\x00" + target))
 	return filepath.Join(appDataRoot, "history-v1", hex.EncodeToString(sum[:])+".yml"), nil
+}
+
+// An empty target identifies a module with no default destination, not the cwd.
+func absoluteTarget(target string) (string, error) {
+	if target == "" {
+		return "", nil
+	}
+	return filepath.Abs(target)
 }
 
 // Save retains prior destinations, deduplicates newly created links, and
@@ -47,7 +55,7 @@ func Save(appDataRoot, source, target string, created []linkplan.Candidate) erro
 	if err != nil {
 		return err
 	}
-	target, err = filepath.Abs(target)
+	target, err = absoluteTarget(target)
 	if err != nil {
 		return err
 	}

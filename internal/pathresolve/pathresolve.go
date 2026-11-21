@@ -71,6 +71,22 @@ func (r Resolver) Resolve(value, base string, fromYAML bool) (string, error) {
 	return filepath.Clean(value), nil
 }
 
+// ResolveDestination resolves a YAML destination without letting a relative
+// path implicitly refer to the process working directory.
+func (r Resolver) ResolveDestination(value, base string) (string, error) {
+	resolved, err := r.Resolve(value, base, true)
+	if err != nil {
+		return "", err
+	}
+	if !filepath.IsAbs(resolved) {
+		if base == "" {
+			return "", fmt.Errorf("destination %q must be absolute when no target directory is configured", value)
+		}
+		return "", fmt.Errorf("destination %q did not resolve to an absolute path", value)
+	}
+	return resolved, nil
+}
+
 func isAlphaNumeric(c byte) bool {
 	return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9'
 }

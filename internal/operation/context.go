@@ -12,8 +12,8 @@ import (
 	"github.com/ADIX7/alma2/internal/startup"
 )
 
-// Repository holds source and default destination roots. RepositoryPathPresent
-// distinguishes an omitted source field for ls, which requires that field.
+// Repository holds the source root and an optional default destination root.
+// RepositoryPathPresent distinguishes an omitted source field for ls.
 type Repository struct {
 	SourceRoot, TargetRoot string
 	RepositoryPathPresent  bool
@@ -26,13 +26,14 @@ type Module struct {
 	Settings                   config.Settings
 }
 
-// ResolveRepository uses working-directory fallbacks only when no named
-// repository is requested or when its corresponding path field is omitted.
+// ResolveRepository uses the working directory as the local source, without
+// assuming a local destination. Named repositories retain their defaults.
 func ResolveRepository(dirs startup.Directories, paths pathresolve.Resolver, repositories []config.Repository, name string) (Repository, error) {
-	result := Repository{SourceRoot: dirs.WorkDir, TargetRoot: filepath.Dir(dirs.WorkDir)}
+	result := Repository{SourceRoot: dirs.WorkDir}
 	if name == "" {
 		return result, nil
 	}
+	result.TargetRoot = filepath.Dir(dirs.WorkDir)
 	for _, entry := range repositories {
 		if entry.Name != name {
 			continue
@@ -78,7 +79,7 @@ func ResolveModule(dirs startup.Directories, paths pathresolve.Resolver, reposit
 	settings := config.Select(configuration, identifier)
 	target := repo.TargetRoot
 	if settings.Target != nil {
-		target, err = paths.Resolve(*settings.Target, target, true)
+		target, err = paths.ResolveDestination(*settings.Target, target)
 		if err != nil {
 			return Module{}, fmt.Errorf("module %q destination: %w", moduleName, err)
 		}

@@ -72,6 +72,29 @@ func TestSavePairsDedupAndOldFilesUntouched(t *testing.T) {
 	}
 }
 
+func TestSaveWithoutDefaultTarget(t *testing.T) {
+	f := testutil.NewFixture(t)
+	root := filepath.Join(f.DataBase, "alma")
+	file, err := File(root, f.Repository, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cwdFile, err := File(root, f.Repository, ".")
+	if err != nil || cwdFile == file {
+		t.Fatalf("unset target shares history with cwd: %q, %v", cwdFile, err)
+	}
+	dest := filepath.Join(f.Target, "mapped")
+	if err := Save(root, f.Repository, "", []linkplan.Candidate{{Target: dest}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := Save(root, f.Repository, "", nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := readRecord(t, file); got.Target != "" || !reflect.DeepEqual(got.Destinations, []string{dest}) {
+		t.Fatalf("no-default-target history: %+v", got)
+	}
+}
+
 func TestSaveRejectsCorruptAndUnwritableHistory(t *testing.T) {
 	f := testutil.NewFixture(t)
 	root := filepath.Join(f.DataBase, "alma")

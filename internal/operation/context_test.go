@@ -33,7 +33,7 @@ func TestResolveRepositoryDefaultsAndNames(t *testing.T) {
 		name, source, target string
 		present              bool
 	}{
-		{"", f.Work, f.Root, false},
+		{"", f.Work, "", false},
 		{"explicit", f.Repository, f.Target, true},
 		{"partial", f.Work, filepath.Join(f.Home, ".links"), false},
 		{"only-source", filepath.Join(f.Home, "sources"), f.Root, true},
@@ -59,8 +59,12 @@ func TestResolveModuleTwoFormsAndTargets(t *testing.T) {
 `)
 	entries := []config.Repository{{Name: "dotfiles", RepositoryPath: str("../repository"), LinkPath: str("../target")}}
 	defaultModule, err := ResolveModule(dirs, paths, entries, "", "fish", "linux-x64")
-	if err != nil || defaultModule.SourceDir != filepath.Join(f.Work, "fish") || defaultModule.TargetDir != f.Root || !defaultModule.Settings.Available || defaultModule.Settings.ExcludeReadme {
-		t.Fatalf("one-position fallback: %+v, %v", defaultModule, err)
+	if err != nil || defaultModule.SourceDir != filepath.Join(f.Work, "fish") || defaultModule.TargetDir != "" || !defaultModule.Settings.Available || defaultModule.Settings.ExcludeReadme {
+		t.Fatalf("local module without target: %+v, %v", defaultModule, err)
+	}
+	f.WriteFile(t, "work/fish/.alma.yml", "platforms: [{platform: default, target: relative}]\n")
+	if _, err := ResolveModule(dirs, paths, entries, "", "fish", "linux-x64"); err == nil || !strings.Contains(err.Error(), "must be absolute") {
+		t.Fatalf("local relative module target: %v", err)
 	}
 	configured, err := ResolveModule(dirs, paths, entries, "dotfiles", "fish", "windows-x64")
 	if err != nil || configured.SourceDir != filepath.Join(f.Repository, "fish") || configured.TargetDir != filepath.Join(f.Target, "module-target") || !configured.Settings.ExcludeReadme {

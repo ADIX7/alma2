@@ -30,7 +30,7 @@ directory with a single-component name (including hidden directory names).
 The repository root is not a module; directories inside a module are payload,
 not nested modules. Neither config file is eligible to become link payload,
 even if explicitly mapped. A module without `.alma.yml` is valid and links
-its discovered files using destination defaults. A configured module whose
+its discovered files only when there is a default destination. A configured module whose
 platform sections do not match is unavailable for linking or commands.
 
 `<config-base>/alma/repository.yml` (paths below are relative to an effective
@@ -60,7 +60,8 @@ platforms:
 
 `editor/config` selects that exact module-relative file, not any other
 `config`; `folder` creates **one directory symlink**, not child links.
-Unmapped files are also linked recursively, preserving relative paths.
+When there is a default destination, unmapped files are also linked
+recursively, preserving relative paths. Without one, unmapped files are skipped.
 `exclude: [scratch]` removes that source subtree; excluding a child *inside*
 an explicitly linked directory cannot hide it—exclude the directory itself.
 Configured modules exclude root `README.md`, `README.txt`, and `README` by
@@ -94,10 +95,16 @@ alma configure fixtures mod   # ONLY when its trusted YAML command is intended
 alma diag list                # diagnostic helper names
 ```
 
-For module operations, `alma link mod` uses the working directory as the
-source repository and its parent as the default destination. Named
-repositories use configured paths; unknown names and invalid module names
-fail rather than falling back. Commands and names are case-sensitive.
+For `alma link mod`, the working directory supplies the source repository,
+not a destination. An explicit module `target:` supplies the default for
+unmapped files and the base for relative mappings. Without a module target,
+only explicit mappings are used, and their destinations must resolve to
+absolute paths (for example, `~/.config/editor/config`). A local module
+`target:` must likewise resolve to an absolute path. If no links are planned,
+the local invocation succeeds without writing anything. Named repositories
+retain their default: the configured `linkPath`, or the parent of the
+working directory if that setting is omitted. Unknown names and invalid
+module names fail rather than falling back. Commands and names are case-sensitive.
 `readme` reads without running a script, even when a configured module is
 unavailable. `install` and `configure` run only on explicit request: inspect
 and trust the YAML first. They accept **single-line** commands, run

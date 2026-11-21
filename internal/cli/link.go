@@ -45,6 +45,13 @@ func runLink(inv Invocation, stdout io.Writer) int {
 		fmt.Fprintln(stdout, err)
 		return 1
 	}
+	if inv.Repository == "" && len(candidates) == 0 {
+		if inv.DryRun {
+			fmt.Fprint(stdout, "Dry run. ")
+		}
+		fmt.Fprintln(stdout, "No links to create.")
+		return 0
+	}
 	if !inv.DryRun {
 		if err := dirs.Prepare(false); err != nil {
 			fmt.Fprintln(stdout, err)

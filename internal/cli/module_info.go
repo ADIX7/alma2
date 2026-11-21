@@ -39,7 +39,11 @@ func showModuleInfo(inv Invocation, dirs startup.Directories, paths pathresolve.
 		fmt.Fprintf(stdout, "Unavailable on platform '%s'.\n", platform.Current())
 		return 0
 	}
-	fmt.Fprintf(stdout, "Target directory is: %s\n", module.TargetDir)
+	if module.TargetDir == "" {
+		fmt.Fprintln(stdout, "No default target directory is configured.")
+	} else {
+		fmt.Fprintf(stdout, "Target directory is: %s\n", module.TargetDir)
+	}
 	if module.Settings.Install != nil {
 		fmt.Fprintln(stdout, "Can be installed.")
 	}
@@ -53,9 +57,9 @@ func showModuleInfo(inv Invocation, dirs startup.Directories, paths pathresolve.
 	fmt.Fprintf(stdout, "Has %d link(s):\n", len(module.Settings.Links))
 	for _, mapping := range module.Settings.Links {
 		source := filepath.Join(module.SourceDir, filepath.FromSlash(mapping.Source))
-		target, err := paths.Resolve(mapping.Target, module.TargetDir, true)
+		target, err := paths.ResolveDestination(mapping.Target, module.TargetDir)
 		if err != nil {
-			fmt.Fprintln(stdout, err)
+			fmt.Fprintf(stdout, "mapping %q target: %v\n", mapping.Source, err)
 			return 1
 		}
 		fmt.Fprintf(stdout, "%s%s%s -> %s%s%s\n", existenceColor(source), mapping.Source, reset, existenceColor(target), target, reset)

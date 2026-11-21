@@ -97,17 +97,75 @@ func TestLinkDryRunFailuresAreReadOnly(t *testing.T) {
 func TestLinkDryRunWorkingDirectoryAndUnavailableModule(t *testing.T) {
 	f := linkFixture(t)
 	f.WriteFile(t, "work/plain/file", "payload")
-	status, output := runFixtureCLI(t, f, "link", "plain", "-d")
-	if status != 0 || !strings.Contains(output, filepath.Join(f.Work, "plain", "file")) || !strings.Contains(output, filepath.Join(f.Root, "file")) {
-		t.Fatalf("one-position fallback: %d %q", status, output)
+	for _, args := range [][]string{{"link", "plain", "-d"}, {"link", "plain"}} {
+		status, output := runFixtureCLI(t, f, args...)
+		if status != 0 || !strings.Contains(output, "No links to create.") {
+			t.Fatalf("local run without a destination: %d %q", status, output)
+		}
+	}
+	for _, path := range []string{filepath.Join(f.Root, "file"), filepath.Join(f.Work, "file")} {
+		if _, err := os.Lstat(path); !os.IsNotExist(err) {
+			t.Fatalf("local run wrote to an implicit target %q: %v", path, err)
+		}
 	}
 	f.WriteFile(t, "repository/unavailable/.alma.yml", "platforms: [{platform: never-supported}]\n")
-	status, output = runFixtureCLI(t, f, "link", "fixtures", "unavailable", "-d")
+	status, output := runFixtureCLI(t, f, "link", "fixtures", "unavailable", "-d")
 	if status == 0 || !strings.Contains(output, "unavailable") {
 		t.Fatalf("unavailable module was planned: %d %q", status, output)
 	}
 	if _, err := os.Lstat(filepath.Join(f.DataBase, "alma")); !os.IsNotExist(err) {
 		t.Fatalf("dry run wrote app data: %v", err)
+	}
+}
+
+func TestLinkLocalDestinationRules(t *testing.T) {
+	f := linkFixture(t)
+	f.WriteFile(t, "work/mod/nested/mapped", "explicit")
+	f.WriteFile(t, "work/mod/nested/unmapped", "automatic")
+	f.WriteFile(t, "work/mod/bundle/child", "directory payload")
+	f.WriteFile(t, "work/mod/.alma.yml", fmt.Sprintf(`platforms:
+  - platform: default
+    links:
+      - {source: nested/mapped, target: '~/mapped'}
+      - {source: bundle, target: '%s'}
+`, filepath.ToSlash(filepath.Join(f.Target, "bundle"))))
+	status, output := runFixtureCLI(t, f, "link", "mod", "-d")
+	if status != 0 || strings.Count(output, "Linking:") != 2 || !strings.Contains(output, filepath.Join(f.Home, "mapped")) || !strings.Contains(output, filepath.Join(f.Target, "bundle")) || strings.Contains(output, "unmapped") || strings.Contains(output, "child") {
+		t.Fatalf("local explicit mappings: %d %q", status, output)
+	}
+	status, output = runFixtureCLI(t, f, "info", "", "mod")
+	if status != 0 || !strings.Contains(output, "No default target directory is configured.") || !strings.Contains(output, filepath.Join(f.Home, "mapped")) {
+		t.Fatalf("local module info: %d %q", status, output)
+	}
+	f.WriteFile(t, "work/mod/.alma.yml", `platforms:
+  - platform: default
+    links:
+      - {source: nested/mapped, target: renamed}
+`)
+	for _, args := range [][]string{{"link", "mod"}, {"link", "mod", "-d"}, {"info", "", "mod"}} {
+		status, output = runFixtureCLI(t, f, args...)
+		if status == 0 || !strings.Contains(output, "must be absolute when no target directory is configured") {
+			t.Fatalf("%v accepted a relative destination: %d %q", args, status, output)
+		}
+	}
+	f.WriteFile(t, "work/mod/.alma.yml", `platforms:
+  - platform: default
+    target: '~/explicit-base'
+    links:
+      - {source: nested/mapped, target: renamed}
+`)
+	status, output = runFixtureCLI(t, f, "link", "mod", "-d")
+	base := filepath.Join(f.Home, "explicit-base")
+	if status != 0 || strings.Count(output, "Linking:") != 3 ||
+		!strings.Contains(output, filepath.Join(base, "renamed")) ||
+		!strings.Contains(output, filepath.Join(base, "nested", "unmapped")) ||
+		!strings.Contains(output, filepath.Join(base, "bundle", "child")) {
+		t.Fatalf("local explicit base: %d %q", status, output)
+	}
+	for _, path := range []string{base, filepath.Join(f.DataBase, "alma")} {
+		if _, err := os.Lstat(path); !os.IsNotExist(err) {
+			t.Fatalf("planning wrote %q: %v", path, err)
+		}
 	}
 }
 

@@ -16,8 +16,9 @@ type Candidate struct {
 	Directory                      bool
 }
 
-// Automatic plans unmapped files, preserving relative directory structure.
-// Directories are traversed, never linked by default; empty directories yield
+// Automatic plans unmapped files under a nonempty target root, preserving
+// relative directory structure. Directories are traversed, never linked by
+// default; empty directories yield
 // no candidates. Payload exclusions follow in S15.
 func Automatic(moduleRoot, targetRoot string) ([]Candidate, error) {
 	return plan(moduleRoot, targetRoot, nil, pathresolve.Resolver{})
@@ -63,12 +64,16 @@ func plan(moduleRoot, targetRoot string, mappings map[string]string, paths pathr
 			if !info.IsDir() && !info.Mode().IsRegular() {
 				continue
 			}
-			target := filepath.Join(targetRoot, relativePath)
+			var target string
 			if mapped {
-				target, err = paths.Resolve(mappedTarget, targetRoot, true)
+				target, err = paths.ResolveDestination(mappedTarget, targetRoot)
 				if err != nil {
 					return fmt.Errorf("mapping %q target: %w", modulePath, err)
 				}
+			} else if targetRoot != "" {
+				target = filepath.Join(targetRoot, relativePath)
+			} else {
+				continue
 			}
 			candidates = append(candidates, Candidate{
 				Source: source, Target: target, RelativeSource: modulePath,
