@@ -155,12 +155,35 @@ CI artifacts require a GitHub login to download; the manual draft release workfl
 can publish publicly downloadable binaries. CI tests/vets/builds on native
 Ubuntu and Windows, and runs the disposable rehearsal on Ubuntu and in a
 Dockerized Linux job using [`Dockerfile.ci`](Dockerfile.ci) and
-[`scripts/ci.sh`](scripts/ci.sh). Run that job locally with:
+[`scripts/ci.sh`](scripts/ci.sh).
+
+### Run tests in Docker
+
+On Windows, use Docker Desktop in Linux containers mode. From the repository
+root, build the image from your current checkout and run it after the build
+succeeds:
 
 ```sh
 docker build -f Dockerfile.ci -t alma2-ci .
 docker run --rm alma2-ci
 ```
+
+This runs formatting checks, the full Go test suite, `go vet`, a build, and the
+fixture rehearsal. No bind mount or Windows symlink privileges are needed.
+Rebuild the image after editing the source.
+
+If dependency download fails with `x509: certificate signed by unknown authority`
+on a network that inspects TLS, obtain the trusted CA bundle in PEM format from
+your administrator. Pass it as a build secret rather than
+turning off certificate verification. With `trusted-ca.pem` outside the
+checkout, for example:
+
+```sh
+docker build --secret id=go_proxy_ca,src=../trusted-ca.pem -f Dockerfile.ci -t alma2-ci .
+docker run --rm alma2-ci
+```
+
+The CA is available only during dependency download, not in the finished image.
 
 ## Manual releases
 

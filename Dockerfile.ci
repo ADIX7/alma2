@@ -2,6 +2,13 @@ FROM golang:1.23-bookworm
 
 WORKDIR /workspace
 COPY go.mod go.sum ./
-RUN go mod download
+# Optional trusted CA for networks that inspect TLS. Do not bake it into the image.
+RUN --mount=type=secret,id=go_proxy_ca \
+    if [ -s /run/secrets/go_proxy_ca ]; then \
+        export SSL_CERT_FILE=/run/secrets/go_proxy_ca; \
+    fi; \
+    go mod download
 COPY . .
+# Normalize Windows checkouts for POSIX shell scripts and Linux gofmt checks.
+RUN find . -type f \( -name '*.sh' -o -name '*.go' \) -exec sed -i 's/\r$//' {} +
 CMD ["sh", "./scripts/ci.sh"]
